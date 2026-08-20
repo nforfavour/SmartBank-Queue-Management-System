@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Bank Queue Management</title>
+    <link rel="stylesheet" href="css/style.css" />
+</head>
+
+<body>
+    <div class="navbar">
+        <div class="brand">Smart<span>Bank</span></div>
+        <nav>
+            <span class="muted" style="color:white;">Digital Queue System</span>
+        </nav>
+    </div>
+    <div class="container" style="max-width:460px;"></div>
+    <div class="card">
+        <div class="tabs">
+            <button class="tab-btn active" id="tablogin" onclick="showTab('loign')">Log In</button>
+            <button class="tab-btn" id="tabRegister" onclick="ahowTap('register')">Register</button>
+
+        </div>
+        <!--LOGIN-->
+        <form id="loginform">
+            <h1>Welcome back</h1>
+            <label>Email</label>
+            <input type="email" id="loginEmail" required placeholder="you@example.com" />
+            <label>Password</label>
+            <input type="password" id="loginPassword" required placeholder="••••••••••••">
+            <button class="btn" type="submit">Log In</button>
+            <p id="loginError" class="Error-msg hidden"></p>
+            <p class="muted" style="margin-top:16px;"></p>
+        </form>
+        <!--REGISTER-->
+        <form id="regiserForm" class="hidden">
+            <h2>Create your account</h2>
+            <label>Full name</label>
+            <input type="text" id="regName" required placeholder="Jane Doe" />
+            <label>Email</label>
+            <input type="email" id="regEmail" required placeholder="you@example.com" />
+            <label>Phone</label>
+            <input type="text" id="regPhone" placeholder="e.g. 67777777" />
+            <label>Password</label>
+            <input type="password" id="regPassword" required minlength="6" placeholder="At least 6 characters" />
+            <button class="btn" type="submit">Create Account</button>
+            <p id="regError" class="error-msg hidden"></p>
+        </form>
+    </div>
+    </div>
+
+</body>
+
+</html>

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Dashboard - SmartBank</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <div class="navbar">
+        <div class="brand">Smart<span>Bank</span> <span class="muted" style="color: #dce6ff; font-size: 0.8rem; ">Staff</span></div>
+        <nav>
+            <span id="whoami" style="color: #dce6ff;"></span>
+            <button class="linklike" onclick="logout()">Log Out</button>
+        </nav>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <h2>Select Service Counter</h2>
+            <div class="tabs" id="serviceTabs"></div>
+        </div>
+        <div class="grid grid-2">
+            <div class="card">
+                <h3>Now Serving / Called</h3>
+                <div id="inProgressList"><p class="muted">Nothing in progress.</p></div>
+            </div>
+            <div class="card">
+                <h3>Up Next</h3>
+                <div class="ticket-number" id="nextNumber">-</div>
+                <p class="muted"><span id="waitingCount">0</span> waiting in this line</p>
+                <button class="btn" id="callNextBtn"> Call Next Customer</button>
+            </div>
+        </div>
+        <div class="card">
+            <h3>Waiting Line (FIFO order)</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Ticket</th>
+                        <th>Customer</th>
+                        <th>Phone</th>
+                        <th>Joined</th>
+                    </tr>
+                </thead>
+                    <tbody id="waitingBody"></tbody>
+            </table>
+        </div>
+    </div>
+    
+
+
+
+    
+</body>
+</html>

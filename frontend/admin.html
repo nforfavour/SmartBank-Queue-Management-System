@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Admin Dashboard - SmartBank</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div class="navbar">
+  <div class="brand">Smart<span>Bank</span> <span class="muted" style="color:#dce6ff;font-size:0.8rem;">Admin</span></div>
+  <nav>
+    <span id="whoami" style="color:#dce6ff;"></span>
+    <button class="linklike" onclick="logout()">Log Out</button>
+  </nav>
+</div>
+
+<div class="container">
+
+  <div class="card">
+    <h2>Today's Overview</h2>
+    <div class="grid grid-3" id="statBoxes"></div>
+  </div>
+
+  <div class="card">
+    <h3>Performance by Service</h3>
+    <table>
+      <thead><tr><th>Service</th><th>Total Today</th><th>Completed</th><th>Currently Waiting</th></tr></thead>
+      <tbody id="byServiceBody"></tbody>
+    </table>
+  </div>
+
+  <div class="grid grid-2">
+    <div class="card">
+      <h3>Manage Services</h3>
+      <div id="serviceList"></div>
+      <hr style="border:none;border-top:1px solid #eef0f4;margin:14px 0;">
+      <h4>Add New Service</h4>
+      <label>Service name</label>
+      <input type="text" id="newServiceName" placeholder="e.g. Loan Consultation" />
+      <label>Average service time (minutes)</label>
+      <input type="number" id="newServiceTime" value="5" min="1" />
+      <button class="btn" id="addServiceBtn">Add Service</button>
+      <p id="serviceMsg" class="muted"></p>
+    </div>
+  </div>
+  <div class="card">
+      <h3>Manage Staff Accounts</h3>
+      <div id="staffList"></div>
+      <hr style="border:none;border-top:1px solid #eef0f4;margin:14px 0;">
+      <h4>Create Staff Account</h4>
+      <label>Name</label>
+      <input type="text" id="newStaffName" />
+      <label>Email</label>
+      <input type="email" id="newStaffEmail" />
+      <label>Temporary Password</label>
+      <input type="text" id="newStaffPassword" placeholder="At least 6 characters" />
+      <button class="btn" id="addStaffBtn">Create Staff Account</button>
+      <p id="staffMsg" class="muted"></p>
+    </div>
+
+</div>
+
+
+</body>
+</html>

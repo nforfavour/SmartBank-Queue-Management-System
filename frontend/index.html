@@ -1,56 +1,110 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Bank Queue Management</title>
-    <link rel="stylesheet" href="css/style.css" />
+<link rel="stylesheet" href="css/style.css" />
 </head>
-
 <body>
-    <div class="navbar">
-        // My New Code
-        <div class="brand">Smart<span>Bank</span></div>
-        <nav>
-            <span class="muted" style="color:white;">Digital Queue System</span>
-        </nav>
-    </div>
-    <div class="container" style="max-width:460px;"></div>
+
+<div class="navbar">
+    <div class="brand">Smart<span>Bank</span></div>
+    <nav>
+    <span class="muted" style="color:#dce6ff;">Digital Queue System</span>
+    </nav>
+</div>
+<div class="container" style="max-width:460px;">
     <div class="card">
-        <div class="tabs">
-            <button class="tab-btn active" id="tablogin" onclick="showTab('loign')">Log In</button>
-            <button class="tab-btn" id="tabRegister" onclick="ahowTap('register')">Register</button>
-
-        </div>
-        <!--LOGIN-->
-        <form id="loginform">
-            <h1>Welcome back</h1>
-            <label>Email</label>
-            <input type="email" id="loginEmail" required placeholder="you@example.com" />
-            <label>Password</label>
-            <input type="password" id="loginPassword" required placeholder="••••••••••••">
-            <button class="btn" type="submit">Log In</button>
-            <p id="loginError" class="Error-msg hidden"></p>
-            <p class="muted" style="margin-top:16px;"></p>
-        </form>
-        <!--REGISTER-->
-        <form id="regiserForm" class="hidden">
-            <h2>Create your account</h2>
-            <label>Full name</label>
-            <input type="text" id="regName" required placeholder="Jane Doe" />
-            <label>Email</label>
-            <input type="email" id="regEmail" required placeholder="you@example.com" />
-            <label>Phone</label>
-            <input type="text" id="regPhone" placeholder="e.g. 67777777" />
-            <label>Password</label>
-            <input type="password" id="regPassword" required minlength="6" placeholder="At least 6 characters" />
-            <button class="btn" type="submit">Create Account</button>
-            <p id="regError" class="error-msg hidden"></p>
-        </form>
+    <div class="tabs">
+        <button class="tab-btn active" id="tabLogin" onclick="showTab('login')">Log In</button>
+        <button class="tab-btn" id="tabRegister" onclick="showTab('register')">Register</button>
     </div>
+        <!-- LOGIN -->
+    <form> id="loginForm" class="hidden">
+    <h2>Welcome back</h2>
+    <label>Email</label> 
+    <input type="email" id="loginEmail" required playceholder="you@example.com" />
+    <label>Password</label> 
+    <input type="password" id="loginPassword" required placeholder="••••••••" />
+    <button class="btn" type="submit">Log In</button>  
+    <p id="loginError" class="error-msg hidden"></p>
+    <p class="muted" style="margin-top:16px;">
+        Staff/Admin demo logins — staff@smartbank.com / Staff@12345, admin@smartbank.com / Admin@12345
+        (change these before real deployment).
+    </p>
+    </form>
+    <!--REGISTER-->
+    <form id="registerForm" class="hidden">
+    <h2>Create an account</h2>
+    <label>Full Name</label>
+    <input type="text" id="registerName" required placeholder="John Doe" />
+    <label>Email</label>
+    <input type="email" id="regEmail" required placeholder="jane Doe" />
+    <label>Phone</label>
+    <input type="text" id="regPhone" placeholder="e.g. 678691257"/>
+    <label>Password</label>
+    <input type="password" id="regPassword" required minlength="6" placeholder="At least 6 characters" />
+    <button class="btn" type="submit">Create Account</button>
+    <p id="regError" class="error-msg hidden"></p>
+    </form>
     </div>
+</div>
+<script src="js/api.js"></script>
+<script> 
+    //if already logged in, skip straight to the dashboard
+    const token = getUser();
+    if(existing && getToken()) {
+        window.location.href = roleHome(existing.role);
+    }
 
+    function showTab(tab) {
+        document.getElementById('loginForm').classList.add("hidden",tab !=="login");
+        document.getElementById("registerForm").classList.toggle("hidden", tab !== "register");
+        document.getElementById("tabLogin").classList.toggle("active", tab === "login");
+        document.getElementById("tabRegister").classList.toggle("active", tab === "register");
+}
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const errEl = document.getElementById("loginError");
+    clearMsg(errEl);
+    try {
+        const data = await apiRequest("/auth/login", {
+        method: "POST",
+        auth: false,
+        body: {
+            email: document.getElementById("loginEmail").value.trim(),
+            password: document.getElementById("loginPassword").value,
+        },
+        });
+        setSession(data.token, data.user);
+        window.location.href = roleHome(data.user.role);
+    } catch (err) {
+        showError(errEl, err.message);
+    }
+    });
+
+document.getElementById("registerForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const errEl = document.getElementById("regError");
+    clearMsg(errEl);
+    try {
+    const data = await apiRequest("/auth/register", {
+        method: "POST",
+        auth: false,
+        body: {
+        username: document.getElementById("regName").value.trim(),
+        email: document.getElementById("regEmail").value.trim(),
+        phone: document.getElementById("regPhone").value.trim(),
+        password: document.getElementById("regPassword").value,
+        },
+    });
+    setSession(data.token, data.user);
+    window.location.href = roleHome(data.user.role);
+    } catch (err) {
+    showError(errEl, err.message);
+    }
+});
+</script>
 </body>
-
 </html>

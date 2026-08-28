@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Customer Portal - SmartBank</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div class="navbar">
+  <div class="brand">Smart<span>Bank</span></div>
+  <nav>
+    <span id="whoami" style="color:#dce6ff;"></span>
+    <button class="linklike" onclick="logout()">Log Out</button>
+  </nav>
+</div>
+
+<div class="container">
+
+  <!-- Active ticket statuses -->
+  <div class="card hidden" id="activeTicketCard">
+    <h2>Your Ticket</h2>
+    <div class="ticket-number" id="ticketNumberDisplay">-</div>
+    <p><span class="badge" id="ticketStatusBadge">Pending</span> &nbsp; <span id="ticketServiceName" class="muted"></span></p>
+    <div id="pendingActions">
+      <p class="muted">You have <strong id="peopleAheadText">0</strong> people ahead of you, roughly <strong id="etaText">0 min</strong> wait.</p>
+      <button class="btn success" id="acceptBtn">Accept &amp; Join Queue</button>
+      <button class="btn danger" id="declineBtn">Decline</button>
+    </div>
+    <div id="waitingActions" class="hidden">
+      <p class="muted">Position: <strong id="livePosition">-</strong> &nbsp;|&nbsp; Estimated wait: <strong id="liveEta">-</strong></p>
+      <button class="btn secondary" id="cancelBtn">Cancel Ticket</button>
+      <button class="btn secondary" id="refreshBtn">Refresh Status</button>
+    </div>
+    <div id="finishedActions" class="hidden">
+      <p class="muted">This ticket is now <strong id="finishedStatus"></strong>.</p>
+      <button class="btn" onclick="location.reload()">Get a New Ticket</button>
+    </div>
+    <!-- Service picker (only shown if no active ticket) -->
+  <div class="card" id="pickServiceCard">
+    <h2>Join a Queue</h2>
+    <p class="muted">Select the service you need. You'll get a queue number and an estimated wait time before you commit.</p>
+    <div class="grid grid-3" id="serviceGrid"></div>
+    <button class="btn" id="getTicketBtn" disabled>Get My Queue Number</button>
+    <p id="requestError" class="error-msg hidden"></p>
+  </div>
+  </div>
+
+
+
+</div>
+
+</body>
+</html>

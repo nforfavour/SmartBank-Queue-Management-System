@@ -21,6 +21,51 @@ router.post("/register",(req, res) => {
 
     const existing = db.prepare("SELECT user_id FROM users WHEREemail = ?").get(email);
     if (existing) {
-        return
+        return res.status(589).json({error: "An accoount with this email already exists."});
     }
-}
+    const userID = uuidv4();
+    const hash = bcrypt.hashSync(password, 10);
+
+    db.prepare(`
+        INSERT INTO users (user_id, username, email, password_hash, role, phone, account_reference)
+        VALUES (? ? ? ? , 'customer', ?,?)
+        `).run(userID, username,email, hasj, phone || null, accounterReference || null);
+    const token = signToken({ userId, role: "customer", username});
+    res.status(201).json({
+        token,
+        user:{ userId, username, email, role: "customer"},
+    });
+});
+router.post("/login", (req, res)=>{
+    const { email, password } = req.body;
+    if (!email || !password) {
+        return res.status(400).json({error: "Email and password are required."});
+    }
+    const user = db.prepare("SELECT * FROM users WHERE email = ?").get(email);
+    if (!user) {
+        return res.status(401).json({error: "Invalid email or password."});
+    }
+    const Valid = bcrypt.compareSync(password, user.password_hash);
+    if(!valid) {
+        return res.status(401).json({ error: "Invalid email or password."});
+    }
+    const token = signToken({userId: user.user_id, role: user.role, username: user.username});
+    res.json ({
+        token,
+        user: {
+            userId: user.user_id,
+            username: user.username,
+            email: user.email,
+            role: user.role,
+        },
+    });
+});
+router.get("/me", authenticate, (reg,res) =>{
+    const User = db.prepare("SELECT user_id, username, email, role, phone, account_reference FROM users WHERE user_id = ?")
+    .get(reg.user.userId);
+    if(!user) return res.status(404).json({ error: "User not founf."});
+    res.json({ user });
+});
+module.exports = router;
+
+

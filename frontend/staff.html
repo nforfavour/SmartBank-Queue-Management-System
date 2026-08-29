@@ -33,9 +33,10 @@
                 <button class="btn" id="callNextBtn"> Call Next Customer</button>
             </div>
         </div>
+
         <div class="card">
-            <h3>Waiting Line (FIFO order) Order of Arrival</h3>
-            <table>\
+            <h3>Waiting Line</h3>
+            <table>
                 <thead>
                     <tr>
                         <th>#</th>
@@ -50,9 +51,103 @@
         </div>
     </div>
     
+<script src="js/api.js"></script>
+<script>
+    const user = requireRole("staff", "admin");
+    document.getElementById("whoami").textContent = user ? `${user.username}` : "";
 
+    let services = [];
+    let activeServiceId = null;
+    let currentInProgress = [];
 
+    async function loadServices() {
+    const { services: list } = await apiRequest("/services", { auth: false });
+    services = list;
+    const tabWrap = document.getElementById("serviceTabs");
+    tabWrap.innerHTML = "";
+    list.forEach((s, idx) => {
+        const btn = document.createElement("button");
+        btn.className = "tab-btn" + (idx === 0 ? " active" : "");
+        btn.textContent = s.service_name;
+        btn.onclick = () => selectService(s.service_id, btn);
+        tabWrap.appendChild(btn);
+    });
+    if (list.length) {
+        activeServiceId = list[0].service_id;
+        refresh();
+    }
+    }
 
+    function selectService(id, btn) {
+    activeServiceId = id;
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    refresh();
+    }
+
+    async function refresh() {
+    if (!activeServiceId) return;
+    const data = await apiRequest(`/queue/service/${activeServiceId}`);
+    currentInProgress = data.inProgress;
+
+    document.getElementById("waitingCount").textContent = data.waitingCount;
+    document.getElementById("nextNumber").textContent = data.waiting[0] ? data.waiting[0].queueNumber : "-";
+    document.getElementById("callNextBtn").disabled = data.waitingCount === 0;
+
+    const wbody = document.getElementById("waitingBody");
+    wbody.innerHTML = "";
+    data.waiting.forEach(w => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${w.position}</td><td><strong>${w.queueNumber}</strong></td><td>${w.customerName}</td>
+        <td>${w.phone || "-"}</td><td>${fmtTime(w.joinedAt)}</td>`;
+        wbody.appendChild(tr);
+    });
+
+    const ipDiv = document.getElementById("inProgressList");
+    if (!data.inProgress.length) {
+        ipDiv.innerHTML = `<p class="muted">Nothing in progress.</p>`;
+    } else {
+        ipDiv.innerHTML = "";
+        data.inProgress.forEach(t => {
+        const row = document.createElement("div");
+        row.style.marginBottom = "12px";
+        row.innerHTML = `
+            <div><strong>${t.queue_number}</strong> — ${t.username} &nbsp; <span class="badge ${t.status}">${t.status}</span></div>
+            <div style="margin-top:6px;">
+            ${t.status === "Called" ? `<button class="btn success" data-action="start" data-id="${t.queue_id}">Start Service</button>
+            <button class="btn secondary" data-action="absent" data-id="${t.queue_id}">Mark Absent</button>` : ""}
+            ${t.status === "InService" ? `<button class="btn" data-action="complete" data-id="${t.queue_id}">Complete</button>` : ""}
+            <button class="btn danger" data-action="skip" data-id="${t.queue_id}">Skip</button>
+            </div>`;
+        ipDiv.appendChild(row);
+        });
+        ipDiv.querySelectorAll("button[data-action]").forEach(btn => {
+        btn.addEventListener("click", () => handleAction(btn.dataset.action, btn.dataset.id));
+        });
+    }
+    }
+
+    document.getElementById("callNextBtn").addEventListener("click", async () => {
+    try {
+        await apiRequest(`/queue/service/${activeServiceId}/call-next`, { method: "POST" });
+        refresh();
+    } catch (err) {
+        alert(err.message);
+    }
+    });
+
+    async function handleAction(action, ticketId) {
+    try {
+        await apiRequest(`/queue/${ticketId}/${action}`, { method: "POST" });
+        refresh();
+    } catch (err) {
+        alert(err.message);
+    }
+    }
+
+    loadServices();
+    setInterval(refresh, 8000);
+</script>
     
 </body>
 </html>

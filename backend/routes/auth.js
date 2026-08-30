@@ -61,10 +61,10 @@ router.post("/login", (req, res) => {
         },
     });
 });
-router.get("/me", authenticate, (reg,res) =>{
+router.get("/me", authenticate, (reg,res) => {
     const User = db.prepare("SELECT user_id, username, email, role, phone, account_reference FROM users WHERE user_id = ?")
     .get(reg.user.userId);
-    if(!user) return res.status(404).json({ error: "User not founf."});
+    if(!user) return res.status(404).json({ error: "User not found."});
     res.json({ user });
 });
 function signToken(payload) {

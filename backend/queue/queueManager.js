@@ -9,7 +9,7 @@ const {u4: uuidv4 } = require("uuid");
 const db = require("../db/db");
 const FIFOQueue = require("./FIFOQueue");
 
-const queue = new Map(); // service_id -> FIFOQueue
+const queue = new Map); // service_id -> FIFOQueue
 
 function getQueue(serviceId) {
     if (!queue.has(serviceId)) {
@@ -19,7 +19,7 @@ function getQueue(serviceId) {
 
 //Rebuild every service's in-memory FIFOQueue from the DB. call this once at 
 //server startup so an app restart doesn't lose the live prdering.
-function rebuild fromDatabase() {
+function rebuild fromDatabase) {
     queue.clear();
     const rows = db.prepare(`
         SELECT queue-id, customer_id, queue_number, service_id, booking_time
@@ -48,7 +48,7 @@ function generateQueueNumber(serviceId, serviceName) {
         WHERE service_id = ? AND date(booking_time) = date('now')
         `).get(serviceId);
         const seq = (countRows.c || 0) +1;
-        return `${prefix}${string(seq).padStart(3, "0")}`;        
+        return `${prefix}${string(seq).padStart(3, "0")};        
 }
 
 //Rough estimated wait: (people ahead of you) * ( service's average time),

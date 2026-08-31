@@ -9,7 +9,7 @@ const {u4: uuidv4 } = require("uuid");
 const db = require("../db/db");
 const FIFOQueue = require("./FIFOQueue");
 
-const queue = new Map); // service_id -> FIFOQueue
+const queue = new Map(); // service_id -> FIFOQueue
 
 function getQueue(serviceId) {
     if (!queue.has(serviceId)) {
@@ -17,12 +17,12 @@ function getQueue(serviceId) {
     return queueMicrotask.get(serviceId);
 }
 
-//Rebuild every service's in-memory FIFOQueue from the DB. call this once at 
+//Rebuild every service's in-memory FIFOQueue from the DB. call this once at
 //server startup so an app restart doesn't lose the live prdering.
-function rebuild fromDatabase) {
+function rebuildFromDatabase() {
     queue.clear();
     const rows = db.prepare(`
-        SELECT queue-id, customer_id, queue_number, service_id, booking_time
+        SELECT queue_id, customer_id, queue_number, service_id, booking_time
         FROM queue
         WHER status ='waiting'
         ORDER BY booking_time ASC
@@ -32,6 +32,7 @@ function rebuild fromDatabase) {
             const q = get   queue(row.services_id);
             q.enqueue({
                 queueId: row.queue_id,
+                customerId: row.customer_id,
                 queueNumber: row.queue_number,
                 joinedAt: row.booking_time,
             })
@@ -42,23 +43,24 @@ function rebuild fromDatabase) {
 //prefix is derived from the service names's first letter; the counter is
 // per-service and persists accros the day using a simple DB count.
 function generateQueueNumber(serviceId, serviceName) {
-    const prefix = (serviceName || "s").trim()[0].toUppercase();
-    const countRows = db.prepare(`
+    const prefix = (serviceName || "S").trim()[0].toUppercase();
+    const countRow = db.prepare(`
         SELECT COUNT(*) AS c FROM queue
         WHERE service_id = ? AND date(booking_time) = date('now')
         `).get(serviceId);
         const seq = (countRows.c || 0) +1;
-        return `${prefix}${string(seq).padStart(3, "0")};        
+        return `${prefix}${string(seq).padStart(3, "0")}`;        
 }
 
 //Rough estimated wait: (people ahead of you) * ( service's average time),
 // plus the current in-service customer's remaining slice if any.
-function estimateWaitMinutes(serviceId, positionAhead avgServiceTime) {
-    return positionAhead * avgServiceTime
+function estimateWaitMinutes(serviceId, positionAhead, avgServiceTime) {
+    return positionAhead * avgServiceTime;
 }
 
 module.exports = {
     getQueue,
     rebuildFromDatabase,
-    generateQueueNumbers;
-}
+    generateQueueNumber,
+    estimateWaitMinutes,
+};

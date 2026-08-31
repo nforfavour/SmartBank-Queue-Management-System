@@ -43,3 +43,37 @@ router.post("/request", authenticate, authorize("customer"), (req, res) => {
     },
   });
 });
+
+// STEP 2: Customer accepts the proposed ticket -> actually joins the live FIFO queue
+router.post("/:id/accept", authenticate, authorize("customer"), (req, res) => {
+  const ticket = getOwnedTicket(req.params.id, req.user.userId);
+  if (!ticket) return res.status(404).json({ error: "Ticket not found." });
+  if (ticket.status !== "Pending") {
+    return res.status(400).json({ error: `Ticket is already ${ticket.status}.` });
+  }
+
+  db.prepare(`UPDATE queue SET status = 'Waiting', check_in_time = datetime('now') WHERE queue_id = ?`)
+    .run(ticket.queue_id);
+
+  const fifo = getQueue(ticket.service_id);
+  fifo.enqueue({
+    queueId: ticket.queue_id,
+    customerId: ticket.customer_id,
+    queueNumber: ticket.queue_number,
+    joinedAt: new Date().toISOString(),
+  });
+
+  res.json({ message: "Joined the queue.", position: fifo.positionOf(ticket.queue_id) });
+});
+
+// STEP 2 (alt): Customer declines the proposed ticket
+router.post("/:id/decline", authenticate, authorize("customer"), (req, res) => {
+  const ticket = getOwnedTicket(req.params.id, req.user.userId);
+  if (!ticket) return res.status(404).json({ error: "Ticket not found." });
+  if (ticket.status !== "Pending") {
+    return res.status(400).json({ error: `Ticket is already ${ticket.status}.` });
+  }
+
+  db.prepare(`UPDATE queue SET status = 'Declined' WHERE queue_id = ?`).run(ticket.queue_id);
+  res.json({ message: "Ticket declined." });
+});

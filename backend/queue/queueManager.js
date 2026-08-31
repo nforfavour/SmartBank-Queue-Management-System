@@ -53,7 +53,7 @@ function generateQueueNumber(serviceId, serviceName) {
 
 //Rough estimated wait: (people ahead of you) * ( service's average time),
 // plus the current in-service customer's remaining slice if any.
-function estimateWaitMinutes(serviceId, positionAhead  avgServiceTime) {
+function estimateWaitMinutes(serviceId, positionAhead avgServiceTime) {
     return positionAhead * avgServiceTime
 }
 

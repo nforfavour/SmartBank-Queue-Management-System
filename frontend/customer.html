@@ -18,7 +18,7 @@
 
 <div class="container">
 
-  <!-- Active ticket statuses -->
+  <!-- Active ticket status -->
   <div class="card hidden" id="activeTicketCard">
     <h2>Your Ticket</h2>
     <div class="ticket-number" id="ticketNumberDisplay">-</div>
@@ -37,84 +37,85 @@
       <p class="muted">This ticket is now <strong id="finishedStatus"></strong>.</p>
       <button class="btn" onclick="location.reload()">Get a New Ticket</button>
     </div>
-    <!-- Service picker (only shown if no active ticket) -->
-   <div class="card" id="pickServiceCard">
+  </div>
+
+  <!-- Service picker (only shown if no active ticket) -->
+  <div class="card" id="pickServiceCard">
     <h2>Join a Queue</h2>
     <p class="muted">Select the service you need. You'll get a queue number and an estimated wait time before you commit.</p>
     <div class="grid grid-3" id="serviceGrid"></div>
     <button class="btn" id="getTicketBtn" disabled>Get My Queue Number</button>
     <p id="requestError" class="error-msg hidden"></p>
-    </div>
-    <!-- History -->
-    <div class="card">
-    <h2>My Recent Tickets/History</h2>
+  </div>
+
+  <!-- History -->
+  <div class="card">
+    <h2>My Recent Tickets</h2>
     <table id="historyTable">
       <thead><tr><th>Number</th><th>Service</th><th>Status</th><th>Time</th></tr></thead>
       <tbody></tbody>
     </table>
-    </div>
-
   </div>
+
 </div>
-
-
 
 <script src="js/api.js"></script>
 <script>
-  const user = requireRole("customer");
-  document.getElementById("whoami").textContect = user ? `${user.name}` : "";
+const user = requireRole("customer");
+document.getElementById("whoami").textContent = user ? `${user.username}` : "";
 
-  let selectedServiceId = null;
-  let currentTickect =  null;
-  let pollTimer = null;
+let selectedServiceId = null;
+let currentTicket = null;
+let pollTimer = null;
 
-  async function loadservices(){
-    const {services } = await apiRequest("/services", {auth:false});
-    const grid = document.getElementById("serviceGrid");
-    grid.innerHTML = "";
-    services.forEach(s=> {
-        const div = document.creatElement("div");
-        div.className = "service-pick";
-        div.innerHTML = `<h3>${s.service_name}</h3><div class="muted">~${s.average_service_time} min / customer</div>`;
-      div.onclick = () => {
-        document.querySelectorAll(".service-pick").forEach(el => el.classList.remove("selected"));
-        div.classList.add("selected");
-        selectedServiceId = s.service_id;
-        document.getElementById("getTicketBtn").disabled = false;
-      };
-     grid.appendChild(div);
-    });
-  }
-  document.getElementById("getTicketBtn").addEventListener("click", async () => {
-  const errEl = document.getElementById("requestError");
-    clearMsg(errEl);
-    try {
-      const { ticket } = await apiRequest("/queue/request", { method: "POST", body: { serviceId: selectedServiceId } });
-      currentTicket = ticket;
-      renderTicket(ticket);
-    } catch (err) {
-      showError(errEl, err.message);
-    }
+async function loadServices() {
+  const { services } = await apiRequest("/services", { auth: false });
+  const grid = document.getElementById("serviceGrid");
+  grid.innerHTML = "";
+  services.forEach(s => {
+    const div = document.createElement("div");
+    div.className = "service-pick";
+    div.innerHTML = `<h3>${s.service_name}</h3><div class="muted">~${s.average_service_time} min / customer</div>`;
+    div.onclick = () => {
+      document.querySelectorAll(".service-pick").forEach(el => el.classList.remove("selected"));
+      div.classList.add("selected");
+      selectedServiceId = s.service_id;
+      document.getElementById("getTicketBtn").disabled = false;
+    };
+    grid.appendChild(div);
   });
-  function renderTicket(t) {
-    document.getElementById("pickServicecard").classList.add("hidden");
-    document.getElementById("activeTIcketCard").classList.remove("hidden");
-    document.getElementById("ticketNumberDisplay").textContent = t.QueueNumber;
-    document.getElementById("ticketServiceName").textContent = t.serviceName || "";
-     const badge = document.getElementById("ticketStatusBadge");
-    badge.textContent = t.status;
-    badge.className = `badge ${t.status}`;
+}
 
-    const pending = ["Pending"].includes(t.status);
-    const waiting = ["Waiting", "Called", "InService"].includes(t.status);
-    const finished = ["Completed", "Skipped", "Cancelled", "Declined", "Absent"].includes(t.status);
-
-    document.getElementById("pendingActions").classList.toggle("hidden", !pending);
-    document.getElementById("waitingActions").classList.toggle("hidden", !waiting);
-    document.getElementById("finishedActions").classList.toggle("hidden", !finished);
- 
+document.getElementById("getTicketBtn").addEventListener("click", async () => {
+  const errEl = document.getElementById("requestError");
+  clearMsg(errEl);
+  try {
+    const { ticket } = await apiRequest("/queue/request", { method: "POST", body: { serviceId: selectedServiceId } });
+    currentTicket = ticket;
+    renderTicket(ticket);
+  } catch (err) {
+    showError(errEl, err.message);
   }
-    if (pending) {
+});
+
+function renderTicket(t) {
+  document.getElementById("pickServiceCard").classList.add("hidden");
+  document.getElementById("activeTicketCard").classList.remove("hidden");
+  document.getElementById("ticketNumberDisplay").textContent = t.queueNumber;
+  document.getElementById("ticketServiceName").textContent = t.serviceName || "";
+  const badge = document.getElementById("ticketStatusBadge");
+  badge.textContent = t.status;
+  badge.className = `badge ${t.status}`;
+
+  const pending = ["Pending"].includes(t.status);
+  const waiting = ["Waiting", "Called", "InService"].includes(t.status);
+  const finished = ["Completed", "Skipped", "Cancelled", "Declined", "Absent"].includes(t.status);
+
+  document.getElementById("pendingActions").classList.toggle("hidden", !pending);
+  document.getElementById("waitingActions").classList.toggle("hidden", !waiting);
+  document.getElementById("finishedActions").classList.toggle("hidden", !finished);
+
+  if (pending) {
     document.getElementById("peopleAheadText").textContent = t.positionIfJoined ? t.positionIfJoined - 1 : 0;
     document.getElementById("etaText").textContent = `${t.estimatedMinutes ?? 0} min`;
   }
@@ -177,4 +178,3 @@ loadHistory();
 </script>
 </body>
 </html>
-

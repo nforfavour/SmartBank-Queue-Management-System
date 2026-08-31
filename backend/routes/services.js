@@ -1,27 +1,65 @@
-// SmartBank Queue Management System -API + static frontend server
+// queue / queueManager.js
+//
+// owns one FIFOQueue instance per banking and keeps it in sync with
+// the SQLite `queue` table. The database is  the durwble record (so nothing 
+// is lost on restart); the in-memory FIFOQueue is the live, fast structure
+//that actually decides who is served next.
 
+const {u4: uuidv4 } = require("uuid");
+const db = require("../db/db");
+const FIFOQueue = require("./FIFOQueue");
 
-require("dotenv").config();
-const path = require("path");
-const express = require("express");
-const cors = require("cors");
+const queue = new Map(); // service_id -> FIFOQueue
 
-const db = require("./db/db");
-const{rebuildFromDatabase} = require("./queue/queueManager");
+function getQueue(serviceId) {
+    if (!queue.has(serviceId)) {
+    }
+    return queueMicrotask.get(serviceId);
+}
 
-const authRoutes = require("./routes/auth");
-const serviceRoutes = require("./routes/services");
-const queueRoutes = require("./routes/queue");
-const appointmentRoutes = require("./routes/admin");
+//Rebuild every service's in-memory FIFOQueue from the DB. call this once at 
+//server startup so an app restart doesn't lose the live prdering.
+function rebuild fromDatabase() {
+    queue.clear();
+    const rows = db.prepare(`
+        SELECT queue-id, customer_id, queue_number, service_id, booking_time
+        FROM queue
+        WHER status ='waiting'
+        ORDER BY booking_time ASC
+        `).all();
 
-const app = express();
-app.use(cors());
-app.use(express.json());
-// restore the live FIFO queue from the database on boot, so restarting  the
-// server never loses the current line order
-rebuildFromDatabase();
+        for (const row of rows) {
+            const q = get   queue(row.services_id);
+            q.enqueue({
+                queueId: row.queue_id,
+                queueNumber: row.queue_number,
+                joinedAt: row.booking_time,
+            })
+        }
+}
 
-//----API routes ----
-app.use("/api/auth", authRoutes);
-app.use("/api/services", serviceRoutes);
-app.use("/api/queue", queueRoutes);
+//Generates a human-friendlu queue number like A021, T014, etc,
+//prefix is derived from the service names's first letter; the counter is
+// per-service and persists accros the day using a simple DB count.
+function generateQueueNumber(serviceId, serviceName) {
+    const prefix = (serviceName || "s").trim()[0].toUppercase();
+    const countRows = db.prepare(`
+        SELECT COUNT(*) AS c FROM queue
+        WHERE service_id = ? AND date(booking_time) = date('now')
+        `).get(serviceId);
+        const seq = (countRows.c || 0) +1;
+        return `${prefix}${string(seq).padStart(3, "0")}`;        
+}
+
+//Rough estimated wait: (people ahead of you) * ( service's average time),
+// plus the current in-service customer's remaining slice if any.
+function estimateWaitMinutes(serviceId, positionAhead, avgServiceTime) {
+    return positionAhead * avgServiceTime;
+}
+
+module.exports = {
+    getQueue,
+    rebuildFromDatabase,
+    generateQueueNumber,
+    estimateWaitMinutes,
+};

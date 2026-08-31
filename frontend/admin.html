@@ -59,9 +59,7 @@
       <button class="btn" id="addStaffBtn">Create Staff Account</button>
       <p id="staffMsg" class="muted"></p>
     </div>
-
-</div>
-
+ </div>
 
 <div class="card">
   <h3>Recent Queue Activity</h3>
@@ -75,16 +73,68 @@
 <script src="js/api.js"></script>
 <script>user
   const user = requireRole("admin.");
-  document.getElementById("whoami").textContent = user ? ` ${user.username}` : "" ;
+  document.getElementById("whoami").textContent = user ?  `${user.username}` : "" ;
 
   async function loadStats() {
     const stats = await apiRequest("/admin/stats"); 
     const boxes = document.getElementById("statBoxes");
-    const totalToday = stats.totalsToday.reduce((sum, s) => sum + s.count, 0);
-    const completed = stats.totalsToday.find(s =>"s.status === "Completed")?.count || 0;
+    const totalToday = stats.totalsToday.reduce((sum, s) => sum + s.count, 0)
     const waiting = stats.totalToday.find(s => s.status === "waiting")?.count || 0;
+    
+    boxes.innerHTML = `
+     <div class="stat-box"><div class="num">${totalToday}</div><div class="label">Tickets Today</div></div>
+     <div class="stat-box"><div class="num">${completed}</div><div class="label">Completed </div></div>
+     <div class="stat-box"><div class="num">${waiting}</div><div class="label">Current Waiting</div></div>
+     <div class="stat-box"><div class="num">${stats.avgwaitminutes ?? "-"}</div><div class="label">Avg Wait (min)</div>
+  `;
+    const body = document.getElementById("byserviceBody");
+    body.innerHTML = "";
+    stats.byservice.forEach(s => {
+      const tr = document.createElement("tr");
+       tr.innerHTML = `<td>${s.service_name}</td><td>${s.totalToday || 0}</td><td>${s.completed || 0}</td><td>${s.waiting || 0}</td>`;
+       body.appendChild(tr);
+    });
 
-  }
+    async function loadservices() {
+      const {service } = await apiRequest("/services", {auth: false});
+      const list = document.getElementById("services");
+      list.innerHTML = "";
+      services.forEach(s => {
+        const row = document.createElement("div");
+        row.className = "muted";
+        row.style.marginBottom = "6px";
+        row.textContent = `${s.service_name}- ~${s.averge_service_time} min`;
+        list.appendChild(row);
+      });
+    }
+
+    document.getElementById("addServiceBtn"). addEventListener("click", async () => {
+      const msg = document.getElementById("serviceMsg");
+      const name = document.getElementById("newServiceName").value.trim() => {
+      const time = perseInt(document.getElementById("newServiceTime").value, 10) || 5;
+      if (!name) {msg.textContent = "Enter a service name."; return; }
+      try {
+        await apiRe
+      }
+      }
+
+    }
+
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Document</title>
+        </head>
+        <body>
+          
+        </body>
+        </html>
+      }
+      
+    }
+        
+       </body>
+    }
+      
+    </body>
   
-
-<

@@ -367,12 +367,11 @@ Please avoid committing directly to `main`.
 
 | Name | Role | GitHub |
 |---|---|---|
-| _Add name_ | _e.g. Backend_ | _@handle_ |
-| _Add name_ | _e.g. Frontend_ | _@handle_ |
-| _Add name_ | _e.g. Database_ | _@handle_ |
-| _Add name_ | _e.g. Documentation_ | _@handle_ |
+| _Nfor Divine Favour Nfor_ | _e.g. Backend_ | _@handle_ |
+| _Nteban Christel Javnyuy_ | _e.g. Frontend_ | _@handle_ |
+| _Tameu Penlap Jude Elysee_ | _e.g. Database_ | _@handle_ |
+| _TiomelaTatsabongBritney_ | _e.g. Documentation_ | _@handle_ |
 
-*(Fill in your team's actual names, roles, and GitHub handles before submission.)*
 
 ---
 
@@ -386,7 +385,7 @@ if the project isn't intended for reuse.
 
 ## 🙏 Acknowledgments
 
-- Built as a group project for **[Course Name / Code]** at **ICT University**.
+- Built as a group project for **Introduction To Software Engineering** at **ICT University**.
 - Queue design inspired by real-world bank ticketing systems.
 
 <div align="center">

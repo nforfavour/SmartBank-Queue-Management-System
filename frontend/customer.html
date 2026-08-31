@@ -38,27 +38,47 @@
       <button class="btn" onclick="location.reload()">Get a New Ticket</button>
     </div>
     <!-- Service picker (only shown if no active ticket) -->
-  <div class="card" id="pickServiceCard">
+   <div class="card" id="pickServiceCard">
     <h2>Join a Queue</h2>
     <p class="muted">Select the service you need. You'll get a queue number and an estimated wait time before you commit.</p>
     <div class="grid grid-3" id="serviceGrid"></div>
     <button class="btn" id="getTicketBtn" disabled>Get My Queue Number</button>
     <p id="requestError" class="error-msg hidden"></p>
-  </div>
+    </div>
     <!-- History -->
-  <div class="card">
+    <div class="card">
     <h2>My Recent Tickets/History</h2>
     <table id="historyTable">
       <thead><tr><th>Number</th><th>Service</th><th>Status</th><th>Time</th></tr></thead>
       <tbody></tbody>
     </table>
-  </div>
+    </div>
 
+  </div>
 </div>
-  </div>
 
 
 
+<script src="js/api.js"></script>
+<script>
+  const user = requireRole("customer");
+  document.getElementById("whoami").textContect = user ? `${user.name}` : "";
+
+  let selectedServiceId = null;
+  let currentTickect =  null;
+  let pollTimer = null;
+
+  async function loadservices(){
+    const {services } = await apiRequest("/services", {auth:false});
+    const grid = document.getElementById("serviceGrid");
+    grid.innerHTML = "";
+    services.forEach(s=> {
+      const div = document.creatElement("div");
+      div.className = "service-pick";
+      div
+    })
+  }
+</script>
 </div>
 
 </body>

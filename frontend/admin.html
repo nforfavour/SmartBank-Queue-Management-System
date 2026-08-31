@@ -24,7 +24,7 @@
   </div>
 
   <div class="card">
-    <h3>Performance by Service</h3>
+    <h3>Performance by Services</h3>
     <table>
       <thead><tr><th>Service</th><th>Total Today</th><th>Completed</th><th>Currently Waiting</th></tr></thead>
       <tbody id="byServiceBody"></tbody>
@@ -63,5 +63,28 @@
 </div>
 
 
-</body>
-</html>
+<div class="card">
+  <h3>Recent Queue Activity</h3>
+  <table>
+    <thead><tr><th>Ticket</th><th>Service</th><th>customer</th></tr></status</th></thead>tr></thead>
+    <tbody id="logBody"></tbody>
+  </table>
+</div>
+</div>
+
+<script src="js/api.js"></script>
+<script>user
+  const user = requireRole("admin.");
+  document.getElementById("whoami").textContent = user ? ` ${user.username}` : "" ;
+
+  async function loadStats() {
+    const stats = await apiRequest("/admin/stats"); 
+    const boxes = document.getElementById("statBoxes");
+    const totalToday = stats.totalsToday.reduce((sum, s) => sum + s.count, 0);
+    const completed = stats.totalsToday.find(s =>"s.status === "Completed")?.count || 0;
+    const waiting = stats.totalToday.find(s => s.status === "waiting")?.count || 0;
+
+  }
+  
+
+<

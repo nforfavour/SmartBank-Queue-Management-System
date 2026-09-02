@@ -369,7 +369,7 @@ Please avoid committing directly to `main`.
 |---|---|---|
 | _Nfor Divine Favour Nfor_ | _e.g. Backend_ | _@nforfavour_ |
 | _Nteban Christel Javnyuy_ | _e.g. Frontend_ | _@ntebanjavnyuy_ |
-| _Tameu Penlap Jude Elysee_ | _e.g. Database_ | _@hjudexnnn_ |
+| _Tameu Penlap Jude Elysee_ | _e.g. Database_ | _@judexnnn_ |
 | _Tiomela Tatsabong Britney_ | _e.g. Documentation_ | _@tiomelabritney-star_ |
 
 

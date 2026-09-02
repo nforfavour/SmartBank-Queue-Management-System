@@ -367,10 +367,10 @@ Please avoid committing directly to `main`.
 
 | Name | Role | GitHub |
 |---|---|---|
-| _Nfor Divine Favour Nfor_ | _e.g. Backend_ | _@handle_ |
-| _Nteban Christel Javnyuy_ | _e.g. Frontend_ | _@handle_ |
-| _Tameu Penlap Jude Elysee_ | _e.g. Database_ | _@handle_ |
-| _TiomelaTatsabongBritney_ | _e.g. Documentation_ | _@handle_ |
+| _Nfor Divine Favour Nfor_ | _e.g. Backend_ | _@nforfavour_ |
+| _Nteban Christel Javnyuy_ | _e.g. Frontend_ | _@ntebanjavnyuy_ |
+| _Tameu Penlap Jude Elysee_ | _e.g. Database_ | _@hjudexnnn_ |
+| _Tiomela Tatsabong Britney_ | _e.g. Documentation_ | _@tiomelabritney-star_ |
 
 
 ---

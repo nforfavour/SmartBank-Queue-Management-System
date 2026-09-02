@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>SmartBank Queue Management</title>
-<link rel="stylesheet" href="css/style.css" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SmartBank Queue Management</title>
+    <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
 
@@ -23,31 +23,30 @@
         </div>
 
     <!-- LOGIN -->
-        <form> id="loginForm">
+        <form id="loginForm">
             <h2>Welcome back</h2>
             <label>Email</label>
-            <input type="email" id="loginEmail" required playceholder="you@example.com" />
+            <input type="email" id="loginEmail" required placeholder="you@example.com" />
             <label>Password</label>
-            <input type="password" id="loginPassword" required placeholder="••••••••" />
+            <input type="password" id="loginPassword" required placeholder="••••••••••" />
             <button class="btn" type="submit">Log In</button>
             <p id="loginError" class="error-msg hidden"></p>
-            <p class="muted" style="margin-top:16px;">
-        Staff/Admin demo logins — staff@smartbank.com / Staff@12345, admin@smartbank.com / Admin@12345
-        (change these before real deployment).
-            </p>.
-    </form>
+            <p class="muted" style="margin-top:16px;"> </p>
+        <!-- Staff/Admin demo logins — staff@smartbank.com / Staff@12345, admin@smartbank.com / Admin@12345
+        // change these before real deployment. -->
+        </form>
 
-    <!-- REGISTER -->
+        <!-- REGISTER -->
         <form id="regiserForm" class="hidden">
             <h2>Create your account</h2>
             <label>Full name</label>
-            <input type="text" id="regName" required placeholder="Jane Doe" />
+            <input type="text" id="regName" required placeholder="Enter your full names" />
             <label>Email</label>
             <input type="email" id="regEmail" required placeholder="you@example.com" />
             <label>Phone</label>
-            <input type="text" id="regPhone" placeholder="e.g. 677123456" />
+            <input type="text" id="regPhone" placeholder="e.g. 6••••••••" />
             <label>Password</label>
-            <input type="password" id="regPassword" required minlength="6" placeholder="At least 6 characters" />
+            <input type="password" id="regPassword" required minlength="6" placeholder="Atleast 6 characters" />
             <button class="btn" type="submit">Create Account</button>
             <p id="regError" class="error-msg hidden"></p>
         </form>
@@ -61,7 +60,6 @@
     if (existing && getToken()) {
         window.location.href = roleHome(existing.role);
     }
-  
 
     function showTab(tab) {
         document.getElementById("loginForm").classList.toggle("hidden", tab !== "login");

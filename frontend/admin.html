@@ -2,189 +2,203 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Admin Dashboard - SmartBank</title>
-<link rel="stylesheet" href="css/style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard - SmartBank</title>
+    <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
 
-<div class="navbar">
-  <div class="brand">Smart<span>Bank</span> <span class="muted" style="color:#dce6ff;font-size:0.8rem;">Admin</span></div>
-  <nav>
-    <span id="whoami" style="color:#dce6ff;"></span>
-    <button class="linklike" onclick="logout()">Log Out</button>
-  </nav>
-</div>
+  <div class="navbar">
+    <div class="brand">Smart<span>Bank</span> <span class="muted" style="color:#dce6ff;font-size:0.8rem;">Admin</span></div>
+    <nav>
+      <span id="whoami" style="color:#dce6ff;"></span>
+      <button class="linklike" onclick="logout()">Log Out</button>
+    </nav>
+  </div>
 
-<div class="container">
+  <div class="container">
 
-  <div class="card">
-    <h2>Today's Overview</h2>
-    <div class="grid grid-3" id="statBoxes"></div>
+    <div class="card">
+      <h2>Today's Overview</h2>
+      <div class="grid grid-3" id="statBoxes"></div>
+    </div>
+
+    <div class="card">
+      <h3>Performance by Services</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Service</th>
+            <th>Total Today</th>
+            <th>Completed</th>
+            <th>Currently Waiting</th>
+          </tr>
+        </thead>
+        <tbody id="byServiceBody"></tbody>
+      </table>
+    </div>
+
+    <div class="grid grid-2">
+      <div class="card">
+        <h3>Manage Services</h3>
+        <div id="serviceList"></div>
+        <hr style="border:none;border-top:1px solid #eef0f4;margin:14px 0;">
+        <h4>Add New Service</h4>
+        <label>Service name</label>
+        <input type="text" id="newServiceName" placeholder="e.g. Loan Consultation" />
+        <label>Average service time (minutes)</label>
+        <input type="number" id="newServiceTime" value="5" min="1" />
+        <button class="btn" id="addServiceBtn">Add Service</button>
+        <p id="serviceMsg" class="muted"></p>
+      </div>
+    </div>
+    <div class="card">
+        <h3>Manage Staff Accounts</h3>
+        <div id="staffList"></div>
+        <hr style="border:none;border-top:1px solid #eef0f4;margin:14px 0;">
+        <h4>Create Staff Account</h4>
+        <label>Name</label>
+        <input type="text" id="newStaffName" />
+        <label>Email</label>
+        <input type="email" id="newStaffEmail" />
+        <label>Temporary Password</label>
+        <input type="text" id="newStaffPassword" placeholder="At least 6 characters" />
+        <button class="btn" id="addStaffBtn">Create Staff Account</button>
+        <p id="staffMsg" class="muted"></p>
+      </div>
   </div>
 
   <div class="card">
-    <h3>Performance by Services</h3>
+    <h3>Recent Queue Activity</h3>
     <table>
-      <thead><tr><th>Service</th><th>Total Today</th><th>Completed</th><th>Currently Waiting</th></tr></thead>
-      <tbody id="byServiceBody"></tbody>
+      <thead> 
+        <tr>
+          <th>Ticket</th>
+          <th>Service</th>
+          <th>customer</th>
+          <th>status</th>
+        </tr>
+      </thead>
+      <tbody id="logBody"></tbody>
     </table>
   </div>
-
-  <div class="grid grid-2">
-    <div class="card">
-      <h3>Manage Services</h3>
-      <div id="serviceList"></div>
-      <hr style="border:none;border-top:1px solid #eef0f4;margin:14px 0;">
-      <h4>Add New Service</h4>
-      <label>Service name</label>
-      <input type="text" id="newServiceName" placeholder="e.g. Loan Consultation" />
-      <label>Average service time (minutes)</label>
-      <input type="number" id="newServiceTime" value="5" min="1" />
-      <button class="btn" id="addServiceBtn">Add Service</button>
-      <p id="serviceMsg" class="muted"></p>
-    </div>
   </div>
-  <div class="card">
-      <h3>Manage Staff Accounts</h3>
-      <div id="staffList"></div>
-      <hr style="border:none;border-top:1px solid #eef0f4;margin:14px 0;">
-      <h4>Create Staff Account</h4>
-      <label>Name</label>
-      <input type="text" id="newStaffName" />
-      <label>Email</label>
-      <input type="email" id="newStaffEmail" />
-      <label>Temporary Password</label>
-      <input type="text" id="newStaffPassword" placeholder="At least 6 characters" />
-      <button class="btn" id="addStaffBtn">Create Staff Account</button>
-      <p id="staffMsg" class="muted"></p>
-    </div>
- </div>
-
-<div class="card">
-  <h3>Recent Queue Activity</h3>
-  <table>
-    <thead><tr><th>Ticket</th><th>Service</th><th>customer</th></tr></status</th></thead>tr></thead>
-    <tbody id="logBody"></tbody>
-  </table>
-</div>
-</div>
 
 <script src="js/api.js"></script>
 <script>
-const user = requireRole("admin");
-document.getElementById("whoami").textContent = user ? `${user.username}` : "";
+  const user = requireRole("admin");
+  document.getElementById("whoami").textContent = user ? `${user.username}` : "";
 
-async function loadStats() {
-  const stats = await apiRequest("/admin/stats");
-  const boxes = document.getElementById("statBoxes");
-  const totalToday = stats.totalsToday.reduce((sum, s) => sum + s.count, 0);
-  const completed = stats.totalsToday.find(s => s.status === "Completed")?.count || 0;
-  const waiting = stats.totalsToday.find(s => s.status === "Waiting")?.count || 0;
+  async function loadStats() {
+    const stats = await apiRequest("/admin/stats");
+    const boxes = document.getElementById("statBoxes");
+    const totalToday = stats.totalsToday.reduce((sum, s) => sum + s.count, 0);
+    const completed = stats.totalsToday.find(s => s.status === "Completed")?.count || 0;
+    const waiting = stats.totalsToday.find(s => s.status === "Waiting")?.count || 0;
 
-  boxes.innerHTML = `
-    <div class="stat-box"><div class="num">${totalToday}</div><div class="label">Tickets Today</div></div>
-    <div class="stat-box"><div class="num">${completed}</div><div class="label">Completed</div></div>
-    <div class="stat-box"><div class="num">${waiting}</div><div class="label">Currently Waiting</div></div>
-    <div class="stat-box"><div class="num">${stats.avgWaitMinutes ?? "-"}</div><div class="label">Avg Wait (min)</div></div>
-    <div class="stat-box"><div class="num">${stats.totalCustomers}</div><div class="label">Registered Customers</div></div>
-  `;
+    boxes.innerHTML = `
+      <div class="stat-box"><div class="num">${totalToday}</div><div class="label">Tickets Today</div></div>
+      <div class="stat-box"><div class="num">${completed}</div><div class="label">Completed</div></div>
+      <div class="stat-box"><div class="num">${waiting}</div><div class="label">Currently Waiting</div></div>
+      <div class="stat-box"><div class="num">${stats.avgWaitMinutes ?? "-"}</div><div class="label">Avg Wait (min)</div></div>
+      <div class="stat-box"><div class="num">${stats.totalCustomers}</div><div class="label">Registered Customers</div></div>
+    `;
 
-  const body = document.getElementById("byServiceBody");
-  body.innerHTML = "";
-  stats.byService.forEach(s => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${s.service_name}</td><td>${s.totalToday || 0}</td><td>${s.completed || 0}</td><td>${s.waiting || 0}</td>`;
-    body.appendChild(tr);
-  });
-}
-
-async function loadServices() {
-  const { services } = await apiRequest("/services", { auth: false });
-  const list = document.getElementById("serviceList");
-  list.innerHTML = "";
-  services.forEach(s => {
-    const row = document.createElement("div");
-    row.className = "muted";
-    row.style.marginBottom = "6px";
-    row.textContent = `${s.service_name} — ~${s.average_service_time} min`;
-    list.appendChild(row);
-  });
-}
-
-document.getElementById("addServiceBtn").addEventListener("click", async () => {
-  const msg = document.getElementById("serviceMsg");
-  const name = document.getElementById("newServiceName").value.trim();
-  const time = parseInt(document.getElementById("newServiceTime").value, 10) || 5;
-  if (!name) { msg.textContent = "Enter a service name."; return; }
-  try {
-    await apiRequest("/services", { method: "POST", body: { serviceName: name, averageServiceTime: time } });
-    document.getElementById("newServiceName").value = "";
-    msg.textContent = "Service added.";
-    loadServices();
-    loadStats();
-  } catch (err) {
-    msg.textContent = err.message;
-  }
-});
-
-async function loadStaff() {
-  const { users } = await apiRequest("/admin/users?role=staff");
-  const list = document.getElementById("staffList");
-  list.innerHTML = "";
-  if (!users.length) list.innerHTML = `<p class="muted">No staff accounts yet.</p>`;
-  users.forEach(u => {
-    const row = document.createElement("div");
-    row.style.display = "flex";
-    row.style.justifyContent = "space-between";
-    row.style.marginBottom = "6px";
-    row.innerHTML = `<span>${u.username} <span class="muted">(${u.email})</span></span>
-      <button class="btn danger" style="margin:0;padding:4px 10px;font-size:0.8rem;" data-id="${u.user_id}">Remove</button>`;
-    list.appendChild(row);
-  });
-  list.querySelectorAll("button[data-id]").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      await apiRequest(`/admin/users/${btn.dataset.id}`, { method: "DELETE" });
-      loadStaff();
+    const body = document.getElementById("byServiceBody");
+    body.innerHTML = "";
+    stats.byService.forEach(s => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${s.service_name}</td><td>${s.totalToday || 0}</td><td>${s.completed || 0}</td><td>${s.waiting || 0}</td>`;
+      body.appendChild(tr);
     });
-  });
-}
-
-document.getElementById("addStaffBtn").addEventListener("click", async () => {
-  const msg = document.getElementById("staffMsg");
-  const username = document.getElementById("newStaffName").value.trim();
-  const email = document.getElementById("newStaffEmail").value.trim();
-  const password = document.getElementById("newStaffPassword").value;
-  if (!username || !email || !password) { msg.textContent = "Fill in all fields."; return; }
-  try {
-    await apiRequest("/admin/users", { method: "POST", body: { username, email, password, role: "staff" } });
-    document.getElementById("newStaffName").value = "";
-    document.getElementById("newStaffEmail").value = "";
-    document.getElementById("newStaffPassword").value = "";
-    msg.textContent = "Staff account created.";
-    loadStaff();
-  } catch (err) {
-    msg.textContent = err.message;
   }
-});
 
-async function loadLog() {
-  const { log } = await apiRequest("/admin/queue-log");
-  const body = document.getElementById("logBody");
-  body.innerHTML = "";
-  log.slice(0, 30).forEach(t => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${t.queue_number}</td><td>${t.service_name}</td><td>${t.username}</td>
-      <td><span class="badge ${t.status}">${t.status}</span></td><td>${fmtTime(t.booking_time)}</td>`;
-    body.appendChild(tr);
+  async function loadServices() {
+    const { services } = await apiRequest("/services", { auth: false });
+    const list = document.getElementById("serviceList");
+    list.innerHTML = "";
+    services.forEach(s => {
+      const row = document.createElement("div");
+      row.className = "muted";
+      row.style.marginBottom = "6px";
+      row.textContent = `${s.service_name} — ~${s.average_service_time} min`;
+      list.appendChild(row);
+    });
+  }
+
+  document.getElementById("addServiceBtn").addEventListener("click", async () => {
+    const msg = document.getElementById("serviceMsg");
+    const name = document.getElementById("newServiceName").value.trim();
+    const time = parseInt(document.getElementById("newServiceTime").value, 10) || 5;
+    if (!name) { msg.textContent = "Enter a service name."; return; }
+    try {
+      await apiRequest("/services", { method: "POST", body: { serviceName: name, averageServiceTime: time } });
+      document.getElementById("newServiceName").value = "";
+      msg.textContent = "Service added.";
+      loadServices();
+      loadStats();
+    } catch (err) {
+      msg.textContent = err.message;
+    }
   });
-}
 
-loadStats();
-loadServices();
-loadStaff();
-loadLog();
-setInterval(loadStats, 15000);
+  async function loadStaff() {
+    const { users } = await apiRequest("/admin/users?role=staff");
+    const list = document.getElementById("staffList");
+    list.innerHTML = "";
+    if (!users.length) list.innerHTML = `<p class="muted">No staff accounts yet.</p>`;
+    users.forEach(u => {
+      const row = document.createElement("div");
+      row.style.display = "flex";
+      row.style.justifyContent = "space-between";
+      row.style.marginBottom = "6px";
+      row.innerHTML = `<span>${u.username} <span class="muted">(${u.email})</span></span>
+        <button class="btn danger" style="margin:0;padding:4px 10px;font-size:0.8rem;" data-id="${u.user_id}">Remove</button>`;
+      list.appendChild(row);
+    });
+    list.querySelectorAll("button[data-id]").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        await apiRequest(`/admin/users/${btn.dataset.id}`, { method: "DELETE" });
+        loadStaff();
+      });
+    });
+  }
+
+  document.getElementById("addStaffBtn").addEventListener("click", async () => {
+    const msg = document.getElementById("staffMsg");
+    const username = document.getElementById("newStaffName").value.trim();
+    const email = document.getElementById("newStaffEmail").value.trim();
+    const password = document.getElementById("newStaffPassword").value;
+    if (!username || !email || !password) { msg.textContent = "Fill in all fields."; return; }
+    try {
+      await apiRequest("/admin/users", { method: "POST", body: { username, email, password, role: "staff" } });
+      document.getElementById("newStaffName").value = "";
+      document.getElementById("newStaffEmail").value = "";
+      document.getElementById("newStaffPassword").value = "";
+      msg.textContent = "Staff account created.";
+      loadStaff();
+    } catch (err) {
+      msg.textContent = err.message;
+    }
+  });
+
+  async function loadLog() {
+    const { log } = await apiRequest("/admin/queue-log");
+    const body = document.getElementById("logBody");
+    body.innerHTML = "";
+    log.slice(0, 30).forEach(t => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${t.queue_number}</td><td>${t.service_name}</td><td>${t.username}</td>
+        <td><span class="badge ${t.status}">${t.status}</span></td><td>${fmtTime(t.booking_time)}</td>`;
+      body.appendChild(tr);
+    });
+  }
+
+  loadStats();
+  loadServices();
+  loadStaff();
+  loadLog();
+  setInterval(loadStats, 15000);
 </script>
 </body>
 </html>

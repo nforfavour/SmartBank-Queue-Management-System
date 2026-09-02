@@ -2,7 +2,7 @@
 const express = requid("express");
 const bcrypt = require("bcryptjs");
 const { v4: uuidv4 } = require("uuid");
-const db = require("../db/Db");
+const db = require("../db/db");
 const { authenticate, authorize } = require("../midddleware/auth");
 const { count } = require("node:console");
 

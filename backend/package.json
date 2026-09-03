@@ -1,12 +1,12 @@
 {
-    "name": "smartbank-queue-management-system",
+    "name": "smartbank-queue-backend",
     "version": "1.0.0",
-    "description": "SmartBank Digital Queue Management System backend",
+    "description": "SmartBank Queue Management System - Backend API",
     "main": "server.js",
     "type": "commonjs",
     "scripts": {
         "start": "node server.js",
-        "dev": "nodemon server.js",
+        "dev": "node server.js",
         "seed": "node db/seed.js"
     },
     "dependencies": {
@@ -16,6 +16,6 @@
         "dotenv": "^16.4.5",
         "express": "^4.19.2",
         "jsonwebtoken": "^9.0.2",
-        "uuid": "^8.3.2"
+        "uuid": "^9.0.1"
     }
 }

@@ -61,120 +61,120 @@
 
 <script src="js/api.js"></script>
 <script>
-const user = requireRole("customer");
-document.getElementById("whoami").textContent = user ? `${user.username}` : "";
+  const user = requireRole("customer");
+  document.getElementById("whoami").textContent = user ? `${user.username}` : "";
 
-let selectedServiceId = null;
-let currentTicket = null;
-let pollTimer = null;
+  let selectedServiceId = null;
+  let currentTicket = null;
+  let pollTimer = null;
 
-async function loadServices() {
-  const { services } = await apiRequest("/services", { auth: false });
-  const grid = document.getElementById("serviceGrid");
-  grid.innerHTML = "";
-  services.forEach(s => {
-    const div = document.createElement("div");
-    div.className = "service-pick";
-    div.innerHTML = `<h3>${s.service_name}</h3><div class="muted">~${s.average_service_time} min / customer</div>`;
-    div.onclick = () => {
-      document.querySelectorAll(".service-pick").forEach(el => el.classList.remove("selected"));
-      div.classList.add("selected");
-      selectedServiceId = s.service_id;
-      document.getElementById("getTicketBtn").disabled = false;
-    };
-    grid.appendChild(div);
+  async function loadServices() {
+    const { services } = await apiRequest("/services", { auth: false });
+    const grid = document.getElementById("serviceGrid");
+    grid.innerHTML = "";
+    services.forEach(s => {
+      const div = document.createElement("div");
+      div.className = "service-pick";
+      div.innerHTML = `<h3>${s.service_name}</h3><div class="muted">~${s.average_service_time} min / customer</div>`;
+      div.onclick = () => {
+        document.querySelectorAll(".service-pick").forEach(el => el.classList.remove("selected"));
+        div.classList.add("selected");
+        selectedServiceId = s.service_id;
+        document.getElementById("getTicketBtn").disabled = false;
+      };
+      grid.appendChild(div);
+    });
+  }
+
+  document.getElementById("getTicketBtn").addEventListener("click", async () => {
+    const errEl = document.getElementById("requestError");
+    clearMsg(errEl);
+    try {
+      const { ticket } = await apiRequest("/queue/request", { method: "POST", body: { serviceId: selectedServiceId } });
+      currentTicket = ticket;
+      renderTicket(ticket);
+    } catch (err) {
+      showError(errEl, err.message);
+    }
   });
-}
 
-document.getElementById("getTicketBtn").addEventListener("click", async () => {
-  const errEl = document.getElementById("requestError");
-  clearMsg(errEl);
-  try {
-    const { ticket } = await apiRequest("/queue/request", { method: "POST", body: { serviceId: selectedServiceId } });
-    currentTicket = ticket;
-    renderTicket(ticket);
-  } catch (err) {
-    showError(errEl, err.message);
+  function renderTicket(t) {
+    document.getElementById("pickServiceCard").classList.add("hidden");
+    document.getElementById("activeTicketCard").classList.remove("hidden");
+    document.getElementById("ticketNumberDisplay").textContent = t.queueNumber;
+    document.getElementById("ticketServiceName").textContent = t.serviceName || "";
+    const badge = document.getElementById("ticketStatusBadge");
+    badge.textContent = t.status;
+    badge.className = `badge ${t.status}`;
+
+    const pending = ["Pending"].includes(t.status);
+    const waiting = ["Waiting", "Called", "InService"].includes(t.status);
+    const finished = ["Completed", "Skipped", "Cancelled", "Declined", "Absent"].includes(t.status);
+
+    document.getElementById("pendingActions").classList.toggle("hidden", !pending);
+    document.getElementById("waitingActions").classList.toggle("hidden", !waiting);
+    document.getElementById("finishedActions").classList.toggle("hidden", !finished);
+
+    if (pending) {
+      document.getElementById("peopleAheadText").textContent = t.positionIfJoined ? t.positionIfJoined - 1 : 0;
+      document.getElementById("etaText").textContent = `${t.estimatedMinutes ?? 0} min`;
+    }
+    if (waiting) {
+      document.getElementById("livePosition").textContent = t.position ?? "-";
+      document.getElementById("liveEta").textContent = t.estimatedMinutes != null ? `${t.estimatedMinutes} min` : "-";
+      if (t.status === "Called") document.getElementById("liveEta").textContent = "You are being called now!";
+    }
+    if (finished) {
+      document.getElementById("finishedStatus").textContent = t.status;
+      if (pollTimer) clearInterval(pollTimer);
+    }
   }
-});
 
-function renderTicket(t) {
-  document.getElementById("pickServiceCard").classList.add("hidden");
-  document.getElementById("activeTicketCard").classList.remove("hidden");
-  document.getElementById("ticketNumberDisplay").textContent = t.queueNumber;
-  document.getElementById("ticketServiceName").textContent = t.serviceName || "";
-  const badge = document.getElementById("ticketStatusBadge");
-  badge.textContent = t.status;
-  badge.className = `badge ${t.status}`;
+  document.getElementById("acceptBtn")?.addEventListener("click", async () => {
+    await apiRequest(`/queue/${currentTicket.queueId}/accept`, { method: "POST" });
+    await pollStatus();
+    startPolling();
+  });
 
-  const pending = ["Pending"].includes(t.status);
-  const waiting = ["Waiting", "Called", "InService"].includes(t.status);
-  const finished = ["Completed", "Skipped", "Cancelled", "Declined", "Absent"].includes(t.status);
+  document.getElementById("declineBtn")?.addEventListener("click", async () => {
+    await apiRequest(`/queue/${currentTicket.queueId}/decline`, { method: "POST" });
+    await pollStatus();
+  });
 
-  document.getElementById("pendingActions").classList.toggle("hidden", !pending);
-  document.getElementById("waitingActions").classList.toggle("hidden", !waiting);
-  document.getElementById("finishedActions").classList.toggle("hidden", !finished);
+  document.getElementById("cancelBtn")?.addEventListener("click", async () => {
+    await apiRequest(`/queue/${currentTicket.queueId}/cancel`, { method: "POST" });
+    await pollStatus();
+  });
 
-  if (pending) {
-    document.getElementById("peopleAheadText").textContent = t.positionIfJoined ? t.positionIfJoined - 1 : 0;
-    document.getElementById("etaText").textContent = `${t.estimatedMinutes ?? 0} min`;
+  document.getElementById("refreshBtn")?.addEventListener("click", pollStatus);
+
+  async function pollStatus() {
+    if (!currentTicket) return;
+    const { ticket } = await apiRequest(`/queue/${currentTicket.queueId}/status`);
+    currentTicket = { ...currentTicket, ...ticket };
+    renderTicket(currentTicket);
+    loadHistory();
   }
-  if (waiting) {
-    document.getElementById("livePosition").textContent = t.position ?? "-";
-    document.getElementById("liveEta").textContent = t.estimatedMinutes != null ? `${t.estimatedMinutes} min` : "-";
-    if (t.status === "Called") document.getElementById("liveEta").textContent = "You are being called now!";
-  }
-  if (finished) {
-    document.getElementById("finishedStatus").textContent = t.status;
+
+  function startPolling() {
     if (pollTimer) clearInterval(pollTimer);
+    pollTimer = setInterval(pollStatus, 8000);
   }
-}
 
-document.getElementById("acceptBtn")?.addEventListener("click", async () => {
-  await apiRequest(`/queue/${currentTicket.queueId}/accept`, { method: "POST" });
-  await pollStatus();
-  startPolling();
-});
+  async function loadHistory() {
+    const { tickets } = await apiRequest("/queue/my/history");
+    const tbody = document.querySelector("#historyTable tbody");
+    tbody.innerHTML = "";
+    tickets.slice(0, 10).forEach(t => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${t.queue_number}</td><td>${t.service_name}</td>
+        <td><span class="badge ${t.status}">${t.status}</span></td><td>${fmtTime(t.booking_time)}</td>`;
+      tbody.appendChild(tr);
+    });
+  }
 
-document.getElementById("declineBtn")?.addEventListener("click", async () => {
-  await apiRequest(`/queue/${currentTicket.queueId}/decline`, { method: "POST" });
-  await pollStatus();
-});
-
-document.getElementById("cancelBtn")?.addEventListener("click", async () => {
-  await apiRequest(`/queue/${currentTicket.queueId}/cancel`, { method: "POST" });
-  await pollStatus();
-});
-
-document.getElementById("refreshBtn")?.addEventListener("click", pollStatus);
-
-async function pollStatus() {
-  if (!currentTicket) return;
-  const { ticket } = await apiRequest(`/queue/${currentTicket.queueId}/status`);
-  currentTicket = { ...currentTicket, ...ticket };
-  renderTicket(currentTicket);
+  loadServices();
   loadHistory();
-}
-
-function startPolling() {
-  if (pollTimer) clearInterval(pollTimer);
-  pollTimer = setInterval(pollStatus, 8000);
-}
-
-async function loadHistory() {
-  const { tickets } = await apiRequest("/queue/my/history");
-  const tbody = document.querySelector("#historyTable tbody");
-  tbody.innerHTML = "";
-  tickets.slice(0, 10).forEach(t => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${t.queue_number}</td><td>${t.service_name}</td>
-      <td><span class="badge ${t.status}">${t.status}</span></td><td>${fmtTime(t.booking_time)}</td>`;
-    tbody.appendChild(tr);
-  });
-}
-
-loadServices();
-loadHistory();
 </script>
 </body>
 </html>

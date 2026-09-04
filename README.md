@@ -367,8 +367,8 @@ Please avoid committing directly to `main`.
 
 | Name | Role | GitHub |
 |---|---|---|
-| _Nfor Divine Favour Nfor_ | _e.g. Backend_ | _@nforfavour_ |
-| _Nteban Christel Javnyuy_ | _e.g. Frontend_ | _@ntebanjavnyuy_ |
+| _Nfor Divine Favour Nfor_ | _Staff (frontend + backemd related)_ | _@nforfavour_ |
+| _Nteban Christel Javnyuy_ | _e.g. Frontend + backend_ | _@ntebanjavnyuy_ |
 | _Tameu Penlap Jude Elysee_ | _e.g. Database_ | _@judexnnn_ |
 | _Tiomela Tatsabong Britney_ | _e.g. Documentation_ | _@tiomelabritney-star_ |
 

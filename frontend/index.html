@@ -47,6 +47,12 @@
             <input type="text" id="regPhone" placeholder="e.g. 6••••••••" />
             <label>Password</label>
             <input type="password" id="regPassword" required minlength="6" placeholder="Atleast 6 characters" />
+
+            <label>Account Type</label>
+            <select id="regRole">
+                <option value="customer" selected>Customer</option>
+            </select>
+
             <button class="btn" type="submit">Create Account</button>
             <p id="regError" class="error-msg hidden"></p>
         </form>

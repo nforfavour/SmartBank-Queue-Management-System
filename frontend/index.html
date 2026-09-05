@@ -51,7 +51,13 @@
             <label>Account Type</label>
             <select id="regRole">
                 <option value="customer" selected>Customer</option>
+                <option value="staff">Staff</option>
+                <option value="admin">Admin</option>
             </select>
+            <div id="signupCodeWrap" class="hidden">
+                <label>Staff/Admin Signup code</label>
+                <input type="password" id="regSignupCode" placeholder="Provided by your bank administrator" />
+            </div>
 
             <button class="btn" type="submit">Create Account</button>
             <p id="regError" class="error-msg hidden"></p>
@@ -73,6 +79,11 @@
         document.getElementById("tabLogin").classList.toggle("active", tab === "login");
         document.getElementById("tabRegister").classList.toggle("active", tab === "register");
     }
+    //only show the signup-code field when staff or Admin is selected .
+    // customer registration never needs a code
+    document.getElimentaryId("regRole").addEventListener("change",(e) => {
+        const needsCode = e.target.value === "staff" || e.target.value === "admin";
+        "});
 
     document.getElementById("loginForm").addEventListener("submit", async (e) => {
         e.preventDefault();

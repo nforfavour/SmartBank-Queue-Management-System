@@ -34,9 +34,10 @@ first-in-first-out order. Admins see everything happening across every service, 
 | Field | Detail |
 |---|---|
 | **Course Code / Title** | ICT 2140 — Introduction to Software Engineering |
-| **Group Number** | _Add your group number_ |
+| **Group Number** | _#_ |
 | **Project Topic** | SmartBank — Digital Queue Management System |
-| **Group Leader** | _Add name_ |
+| **Scrum Master** | _Nfor Divine Favour Nfor_ |
+| **Scrum Master** | _Nteban Christel Javnyuy_ |
 | **Link to GitHub Repository** | https://github.com/nforfavour/SmartBank-Queue-Management-System |
 | **Live Deployed App** | _Add your Render/Railway URL here once deployed — see [Deployment](#-deployment) below_ |
 

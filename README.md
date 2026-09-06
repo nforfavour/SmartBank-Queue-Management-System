@@ -34,9 +34,10 @@ first-in-first-out order. Admins see everything happening across every service, 
 | Field | Detail |
 |---|---|
 | **Course Code / Title** | ICT 2140 — Introduction to Software Engineering |
-| **Group Number** | _Add your group number_ |
+| **Group Number** | _#_ |
 | **Project Topic** | SmartBank — Digital Queue Management System |
-| **Group Leader** | _Add name_ |
+| **Scrum Master** | _Nfor Divine Favour Nfor_ |
+| **Scrum Master** | _Nteban Christel Javnyuy_ |
 | **Link to GitHub Repository** | https://github.com/nforfavour/SmartBank-Queue-Management-System |
 | **Live Deployed App** | _Add your Render/Railway URL here once deployed — see [Deployment](#-deployment) below_ |
 
@@ -167,10 +168,6 @@ git clone https://github.com/nforfavour/SmartBank-Queue-Management-System.git
 cd SmartBank-Queue-Management-System
 ```
 
-> 💡 If you downloaded this as a ZIP instead, extract it somewhere simple like
-> your Desktop or Documents folder — avoid extracting inside a cloud-synced
-> folder (OneDrive, Google Drive) or a path containing spaces.
-
 ### 2. Install backend dependencies
 
 ```bash
@@ -223,10 +220,6 @@ SmartBank server running on http://localhost:4000
 
 Visit **[http://localhost:4000](http://localhost:4000)** in your browser.
 
-> 🚫 **Do not** open `frontend/index.html` directly as a file (`file://...`) —
-> it must be loaded through the running server so it can reach the API.
-> This is the single most common setup mistake.
-
 ### Account registration — no default logins
 
 There are **no pre-created accounts**. Everyone — Customer, Staff, and Admin
@@ -235,15 +228,10 @@ page.
 
 - **Customers** register normally, no code needed.
 - **Staff/Admin** select their role at registration and must enter the
-  matching secret code (`STAFF_SIGNUP_CODE` / `ADMIN_SIGNUP_CODE` from your
+  matching secret code (`STF-194` / `ADM-194` from your
   `.env`). This is what stops a random visitor from granting themselves
   bank-employee access — only people your team gives the code to can become
   Staff or Admin.
-
-> 🔑 Share your `STAFF_SIGNUP_CODE` / `ADMIN_SIGNUP_CODE` with your teammates
-> directly (e.g. in your group chat) — never commit them to GitHub. Change
-> both to something unique before deploying; don't leave the `.env.example`
-> placeholder values in place.
 
 ---
 
@@ -504,7 +492,7 @@ Please avoid committing directly to `main`.
 
 - Built as the final project for **ICT 2140 — Introduction to Software
   Engineering**, Faculty of Information and Communication Technologies,
-  **ICT University**, Summer 2026, under **Instructor Tekoh Palma Achu**.
+  **ICT University**, Summer 2026, under **Engr Tekoh Palma Achu**.
 - Queue design inspired by real-world bank ticketing systems.
 
 <div align="center">

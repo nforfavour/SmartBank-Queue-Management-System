@@ -18,7 +18,15 @@ router.post("/register", (req, res) => {
     if (password.length < 6) {
         return res.status(400).json({error: "username, email and password are required."});
     }
-
+    const requestedRole = role || "customer";
+    if (!["customer", "staff", "admin"].includes(requestedRole)) {
+        return res.status(400).json({ error: "role must be customer, staff, admin." });
+    }
+    //customer requires no code. staff//admin require the matching secret code
+    // from .env, so random visitors cant grant themselves bank-employeee access.
+    if (requestedRole === "admin" && signupCode !== process.env.ADMIN_SIGNUP_CODE) {
+        return res.status(403).json({ error: "Invalid admin signup code." });
+    }
     const existing = db.prepare("SELECT user_id FROM users WHERE email = ?").get(email);
     if (existing) {
         return res.status(409).json({error: "An accoount with this email already exists."});
@@ -29,11 +37,11 @@ router.post("/register", (req, res) => {
     db.prepare(`
         INSERT INTO users (user_id, username, email, password_hash, role, phone, account_reference)
         VALUES (? ? ? ? , 'customer', ?,?)
-        `).run(userId, username, email, hash, phone || null, accountReference || null);
-    const token = signToken({ userId, role: "customer", username });
+        `).run(userId, username, email, hash, requestedRole, phone || null, accountReference || null);
+    const token = signToken({ userId, role: requestedRole, username });
     res.status(201).json({
         token,
-        user:{ userId, username, email, role: "customer"},
+        user:{ userId, username, email, role: requestedRole },
     });
 });
 router.post("/login", (req, res) => {

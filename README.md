@@ -37,7 +37,7 @@ first-in-first-out order. Admins see everything happening across every service, 
 | **Group Number** | _#_ |
 | **Project Topic** | SmartBank — Digital Queue Management System |
 | **Scrum Master** | _Nfor Divine Favour Nfor_ |
-| **Scrum Master** | _Nteban Christel Javnyuy_ |
+| **Product Owner** | _Nteban Christel Javnyuy_ |
 | **Link to GitHub Repository** | https://github.com/nforfavour/SmartBank-Queue-Management-System |
 | **Live Deployed App** | _Add your Render/Railway URL here once deployed — see [Deployment](#-deployment) below_ |
 

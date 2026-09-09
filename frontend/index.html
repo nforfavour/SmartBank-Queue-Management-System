@@ -19,7 +19,7 @@
     <div class="card">
         <div class="tabs">
             <button class="tab-btn active" id="tabLogin" onclick="showTab('login')">Log In</button>
-            <button class="tab-btn" id="tabRegister" onclick="showTab('register')">Register</button> z  
+            <button class="tab-btn" id="tabRegister" onclick="showTab('register')">Register</button>
         </div>
 
     <!-- LOGIN -->
@@ -32,8 +32,6 @@
             <button class="btn" type="submit">Log In</button>
             <p id="loginError" class="error-msg hidden"></p>
             <p class="muted" style="margin-top:16px;"> </p>
-        <!-- Staff/Admin demo logins — staff@smartbank.com / Staff@12345, admin@smartbank.com / Admin@12345
-        // change these before real deployment. -->
         </form>
 
         <!-- REGISTER -->
@@ -47,6 +45,18 @@
             <input type="text" id="regPhone" placeholder="e.g. 6••••••••" />
             <label>Password</label>
             <input type="password" id="regPassword" required minlength="6" placeholder="Atleast 6 characters" />
+
+            <label>Account Type</label>
+            <select id="regRole">
+                <option value="customer" selected>Customer</option>
+                <option value="staff">Staff</option>
+                <option value="admin">Admin</option>
+            </select>
+            <div id="signupCodeWrap" class="hidden">
+                <label>Staff/Admin Signup code</label>
+                <input type="password" id="regSignupCode" placeholder="Provided by your bank administrator" />
+            </div>
+
             <button class="btn" type="submit">Create Account</button>
             <p id="regError" class="error-msg hidden"></p>
         </form>
@@ -67,6 +77,11 @@
         document.getElementById("tabLogin").classList.toggle("active", tab === "login");
         document.getElementById("tabRegister").classList.toggle("active", tab === "register");
     }
+    //only show the signup-code field when staff or Admin is selected .
+    // customer registration never needs a code
+    document.getElimentaryId("regRole").addEventListener("change",(e) => {
+        const needsCode = e.target.value === "staff" || e.target.value === "admin";
+        "});
 
     document.getElementById("loginForm").addEventListener("submit", async (e) => {
         e.preventDefault();

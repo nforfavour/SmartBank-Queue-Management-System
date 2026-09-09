@@ -1,18 +1,18 @@
 services:
- - type: web
-   name: smartbank-queue-system
-   env: docker
-   plan: free
-   envVars:
-     - key: JWT_SECRET
-       generateValue: true
-     - key: JWT_EXPIRES_IN
-       value: 8h
-     - key: ADMIN_DEFAULT_EMAIL
-       value: admin@smartbank.com
-     - key: ADMIN_DEFAULT_PASSWORD
-       sync: false
-   disk:
-     name: smartbank-data
-     mountpath: /app/backend/db
-     sizeGB: 1
+  - type: web
+    name: smartbank-queue-system
+    env: docker
+    plan: free
+    envVars:
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 8h
+      - key: STAFF_SIGNUP_CODE
+        sync: false
+      - key: ADMIN_SIGNUP_CODE
+        sync: false
+    disk:
+      name: smartbank-data
+      mountPath: /app/backend/db
+      sizeGB: 1

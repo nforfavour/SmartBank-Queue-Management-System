@@ -12,7 +12,3 @@ services:
         sync: false
       - key: ADMIN_SIGNUP_CODE
         sync: false
-    disk:
-      name: smartbank-data
-      mountPath: /app/backend/db
-      sizeGB: 1

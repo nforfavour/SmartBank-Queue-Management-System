@@ -4,7 +4,7 @@
 
 const { v4: uuidv4 } = require("uuid");
 require("dotenv").config();
-const db = require("./db");m
+const db = require("./db");
 
 function seed() {
   const services = [

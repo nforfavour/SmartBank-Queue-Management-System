@@ -1,10 +1,10 @@
 // routes /auth.js
 const express = require("express");
-const bcrypt = require("bcrytjs");
+const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { v4: uuidv4} = require("uuid");
 const db = require("../db/db");
-const { authenticate } = required("../middleware/auth");
+const { authenticate } = require("../middleware/auth");
 
 const router = express.Router();
 

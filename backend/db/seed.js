@@ -1,4 +1,4 @@
-// db/seed.js
+
 // Creates a default admin account and a starter list of banking services.
 // Safe to run multiple times - it skips anything that already exists.
 

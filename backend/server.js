@@ -9,7 +9,7 @@ const { rebuildFromDatabase } = require("./queue/queueManager");
 const authRoutes = require("./routes/auth");
 const serviceRoutes = require("./routes/services");
 const queueRoutes = require("./routes/queue");
-//const appointmentRoutes = require("./routes/appointments");
+const appointmentRoutes = require("./routes/appointments");
 const adminRoutes = require("./routes/admin");
 
 const app = express();
@@ -21,7 +21,7 @@ rebuildFromDatabase();
 app.use("/api/auth", authRoutes);
 app.use("/api/services", serviceRoutes);
 app.use("/api/queue", queueRoutes);
-//app.use("/api/appointments", appointmentRoutes);
+app.use("/api/appointments", appointmentRoutes);
 app.use("/api/admin", adminRoutes);
 
 app.get("/api/health", (req,res)=> res.json({status:"ok", time: new Date().toISOString()}));

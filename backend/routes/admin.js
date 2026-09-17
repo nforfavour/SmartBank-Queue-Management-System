@@ -7,10 +7,9 @@ const { authenticate, authorize } = require("../middleware/auth");
 
 const router = express.Router();
 
-// Every route below requires a logged-in Admin.
 router.use(authenticate, authorize("admin"));
 
-// Dashboard statistics: totals by status today + per-service performance.
+// Dashboard statistics - field names match admin.html exactly.
 router.get("/stats", (req, res) => {
   const totalsToday = db.prepare(`
     SELECT status, COUNT(*) AS count FROM queue
@@ -20,10 +19,10 @@ router.get("/stats", (req, res) => {
 
   const byService = db.prepare(`
     SELECT
-      s.service_name AS serviceName,
+      s.service_name AS service_name,
       COUNT(q.queue_id) AS totalToday,
       SUM(CASE WHEN q.status = 'Completed' THEN 1 ELSE 0 END) AS completed,
-      SUM(CASE WHEN q.status = 'Waiting' THEN 1 ELSE 0 END) AS currentlyWaiting
+      SUM(CASE WHEN q.status = 'Waiting' THEN 1 ELSE 0 END) AS waiting
     FROM services s
     LEFT JOIN queue q
       ON q.service_id = s.service_id AND date(q.booking_time) = date('now')
@@ -32,19 +31,33 @@ router.get("/stats", (req, res) => {
     ORDER BY s.service_name
   `).all();
 
-  res.json({ totalsToday, byService });
+  const totalCustomers = db.prepare(
+    "SELECT COUNT(*) AS c FROM users WHERE role = 'customer'"
+  ).get().c;
+
+  const avgRow = db.prepare(`
+    SELECT AVG(estimated_time) AS avg FROM queue
+    WHERE date(booking_time) = date('now') AND estimated_time IS NOT NULL
+  `).get();
+  const avgWaitMinutes = avgRow.avg ? Math.round(avgRow.avg) : null;
+
+  res.json({ totalsToday, byService, totalCustomers, avgWaitMinutes });
 });
 
-// List all user accounts.
+// List users, optionally filtered by role (?role=staff)
 router.get("/users", (req, res) => {
-  const users = db.prepare(
-    "SELECT user_id, username, email, role, created_at FROM users ORDER BY created_at DESC"
-  ).all();
+  const { role } = req.query;
+  const users = role
+    ? db.prepare(
+        "SELECT user_id, username, email, role, created_at FROM users WHERE role = ? ORDER BY created_at DESC"
+      ).all(role)
+    : db.prepare(
+        "SELECT user_id, username, email, role, created_at FROM users ORDER BY created_at DESC"
+      ).all();
   res.json({ users });
 });
 
-// Admin creates a Staff or Admin account directly (no signup code needed -
-// only an already-logged-in Admin can reach this route at all).
+// Admin creates a Staff or Admin account directly.
 router.post("/users", (req, res) => {
   const { username, email, password, role } = req.body;
 
@@ -77,7 +90,6 @@ router.post("/users", (req, res) => {
   });
 });
 
-// Remove an account.
 router.delete("/users/:id", (req, res) => {
   const result = db.prepare("DELETE FROM users WHERE user_id = ?").run(req.params.id);
   if (result.changes === 0) {
@@ -86,18 +98,17 @@ router.delete("/users/:id", (req, res) => {
   res.json({ message: "User removed." });
 });
 
-// Recent activity across all services, for the dashboard's activity table.
+// Recent activity - admin.html expects { log: [...] }
 router.get("/queue-log", (req, res) => {
   const rows = db.prepare(`
-    SELECT q.queue_number AS ticket, s.service_name AS service,
-           u.username AS customer, q.status
+    SELECT q.queue_number, s.service_name, u.username, q.status, q.booking_time
     FROM queue q
     JOIN services s ON s.service_id = q.service_id
     JOIN users u ON u.user_id = q.customer_id
     ORDER BY q.booking_time DESC
     LIMIT 50
   `).all();
-  res.json({ activity: rows });
+  res.json({ log: rows });
 });
 
 module.exports = router;

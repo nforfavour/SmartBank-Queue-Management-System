@@ -1,129 +1,130 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SmartBank Queue Management</title>
-    <link rel="stylesheet" href="css/style.css" />
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SmartBank Queue Management</title>
+<link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
 
 <div class="navbar">
-    <div class="brand">Smart<span>Bank</span></div>
-    <nav>
-        <span class="muted" style="color:#dce6ff;">Digital Queue System</span>
-    </nav>
+  <div class="brand">Smart<span>Bank</span></div>
+  <nav>
+    <span class="muted" style="color:#dce6ff;">Digital Queue System</span>
+  </nav>
 </div>
 
 <div class="container" style="max-width:460px;">
-    <div class="card">
-        <div class="tabs">
-            <button class="tab-btn active" id="tabLogin" onclick="showTab('login')">Log In</button>
-            <button class="tab-btn" id="tabRegister" onclick="showTab('register')">Register</button>
-        </div>
+  <div class="card">
+    <div class="tabs">
+      <button class="tab-btn active" id="tabLogin" onclick="showTab('login')">Log In</button>
+      <button class="tab-btn" id="tabRegister" onclick="showTab('register')">Register</button>
+    </div>
 
     <!-- LOGIN -->
-        <form id="loginForm">
-            <h2>Welcome back</h2>
-            <label>Email</label>
-            <input type="email" id="loginEmail" required placeholder="you@example.com" />
-            <label>Password</label>
-            <input type="password" id="loginPassword" required placeholder="••••••••••" />
-            <button class="btn" type="submit">Log In</button>
-            <p id="loginError" class="error-msg hidden"></p>
-            <p class="muted" style="margin-top:16px;"> </p>
-        </form>
+    <form id="loginForm">
+      <h2>Welcome back</h2>
+      <label>Email</label>
+      <input type="email" id="loginEmail" required placeholder="you@example.com" />
+      <label>Password</label>
+      <input type="password" id="loginPassword" required placeholder="••••••••" />
+      <button class="btn" type="submit">Log In</button>
+      <p id="loginError" class="error-msg hidden"></p>
+    </form>
 
-        <!-- REGISTER -->
-        <form id="regiserForm" class="hidden">
-            <h2>Create your account</h2>
-            <label>Full name</label>
-            <input type="text" id="regName" required placeholder="Enter your full names" />
-            <label>Email</label>
-            <input type="email" id="regEmail" required placeholder="you@example.com" />
-            <label>Phone</label>
-            <input type="text" id="regPhone" placeholder="e.g. 6••••••••" />
-            <label>Password</label>
-            <input type="password" id="regPassword" required minlength="6" placeholder="Atleast 6 characters" />
+    <!-- REGISTER -->
+    <form id="registerForm" class="hidden">
+      <h2>Create your account</h2>
+      <label>Full name</label>
+      <input type="text" id="regName" required placeholder="Jane Doe" />
+      <label>Email</label>
+      <input type="email" id="regEmail" required placeholder="you@example.com" />
+      <label>Phone</label>
+      <input type="text" id="regPhone" placeholder="e.g. 677123456" />
+      <label>Password</label>
+      <input type="password" id="regPassword" required minlength="6" placeholder="At least 6 characters" />
 
-            <label>Account Type</label>
-            <select id="regRole">
-                <option value="customer" selected>Customer</option>
-                <option value="staff">Staff</option>
-                <option value="admin">Admin</option>
-            </select>
-            <div id="signupCodeWrap" class="hidden">
-                <label>Staff/Admin Signup code</label>
-                <input type="password" id="regSignupCode" placeholder="Provided by your bank administrator" />
-            </div>
+      <label>Account type</label>
+      <select id="regRole">
+        <option value="customer" selected>Customer</option>
+        <option value="staff">Staff</option>
+        <option value="admin">Admin</option>
+      </select>
 
-            <button class="btn" type="submit">Create Account</button>
-            <p id="regError" class="error-msg hidden"></p>
-        </form>
-    </div>
+      <div id="signupCodeWrap" class="hidden">
+        <label>Staff/Admin signup code</label>
+        <input type="password" id="regSignupCode" placeholder="Provided by your bank administrator" />
+      </div>
+
+      <button class="btn" type="submit">Create Account</button>
+      <p id="regError" class="error-msg hidden"></p>
+    </form>
+  </div>
 </div>
 
 <script src="js/api.js"></script>
 <script>
-  // If already logged in, skip straight to the right dashboard
-    const existing = getUser();
-    if (existing && getToken()) {
-        window.location.href = roleHome(existing.role);
-    }
+  const existing = getUser();
+  if (existing && getToken()) {
+    window.location.href = roleHome(existing.role);
+  }
 
-    function showTab(tab) {
-        document.getElementById("loginForm").classList.toggle("hidden", tab !== "login");
-        document.getElementById("registerForm").classList.toggle("hidden", tab !== "register");
-        document.getElementById("tabLogin").classList.toggle("active", tab === "login");
-        document.getElementById("tabRegister").classList.toggle("active", tab === "register");
-    }
-    //only show the signup-code field when staff or Admin is selected .
-    // customer registration never needs a code
-    document.getElimentaryId("regRole").addEventListener("change",(e) => {
-        const needsCode = e.target.value === "staff" || e.target.value === "admin";
-        "});
+  function showTab(tab) {
+    document.getElementById("loginForm").classList.toggle("hidden", tab !== "login");
+    document.getElementById("registerForm").classList.toggle("hidden", tab !== "register");
+    document.getElementById("tabLogin").classList.toggle("active", tab === "login");
+    document.getElementById("tabRegister").classList.toggle("active", tab === "register");
+  }
 
-    document.getElementById("loginForm").addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const errEl = document.getElementById("loginError");
-        clearMsg(errEl);
-        try {
-            const data = await apiRequest("/auth/login", {
-            method: "POST",
-            auth: false,
-            body: {
-                email: document.getElementById("loginEmail").value.trim(),
-                password: document.getElementById("loginPassword").value,
-            },
-        });
-        setSession(data.token, data.user);
-        window.location.href = roleHome(data.user.role);
+  document.getElementById("regRole").addEventListener("change", (e) => {
+    const needsCode = e.target.value === "staff" || e.target.value === "admin";
+    document.getElementById("signupCodeWrap").classList.toggle("hidden", !needsCode);
+  });
+
+  document.getElementById("loginForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const errEl = document.getElementById("loginError");
+    clearMsg(errEl);
+    try {
+      const data = await apiRequest("/auth/login", {
+        method: "POST",
+        auth: false,
+        body: {
+          email: document.getElementById("loginEmail").value.trim(),
+          password: document.getElementById("loginPassword").value,
+        },
+      });
+      setSession(data.token, data.user);
+      window.location.href = roleHome(data.user.role);
     } catch (err) {
-        showError(errEl, err.message);
+      showError(errEl, err.message);
     }
-    });
+  });
 
-    document.getElementById("registerForm").addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const errEl = document.getElementById("regError");
-        clearMsg(errEl);
-        try {
-            const data = await apiRequest("/auth/register", {
-                method: "POST",
-                auth: false,
-                body: {
-                    username: document.getElementById("regName").value.trim(),
-                    email: document.getElementById("regEmail").value.trim(),
-                    phone: document.getElementById("regPhone").value.trim(),
-                    password: document.getElementById("regPassword").value,
-            },
-        });
-        setSession(data.token, data.user);
-        window.location.href = roleHome(data.user.role);
+  document.getElementById("registerForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const errEl = document.getElementById("regError");
+    clearMsg(errEl);
+    try {
+      const data = await apiRequest("/auth/register", {
+        method: "POST",
+        auth: false,
+        body: {
+          username: document.getElementById("regName").value.trim(),
+          email: document.getElementById("regEmail").value.trim(),
+          phone: document.getElementById("regPhone").value.trim(),
+          password: document.getElementById("regPassword").value,
+          role: document.getElementById("regRole").value,
+          signupCode: document.getElementById("regSignupCode").value,
+        },
+      });
+      setSession(data.token, data.user);
+      window.location.href = roleHome(data.user.role);
     } catch (err) {
-        showError(errEl, err.message);
+      showError(errEl, err.message);
     }
-    });
+  });
 </script>
 </body>
 </html>

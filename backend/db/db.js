@@ -74,4 +74,12 @@ CREATE INDEX IF NOT EXISTS idx_queue_service_status ON queue(service_id, status)
 CREATE INDEX IF NOT EXISTS idx_queue_customer ON queue(customer_id);
 `);
 
+// Add verification columns if they don't already exist (safe on existing databases)
+try {
+  db.exec("ALTER TABLE users ADD COLUMN email_verified INTEGER DEFAULT 0");
+} catch (e) { /* column already exists, ignore */ }
+try {
+  db.exec("ALTER TABLE users ADD COLUMN verification_code TEXT");
+} catch (e) { /* column already exists, ignore */ }
+
 module.exports = db;

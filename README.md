@@ -39,7 +39,7 @@ first-in-first-out order. Admins see everything happening across every service, 
 | **Scrum Master** | _Nfor Divine Favour Nfor_ |
 | **Product Owner** | _Nteban Christel Javnyuy_ |
 | **Link to GitHub Repository** | https://github.com/nforfavour/SmartBank-Queue-Management-System |
-| **Live Deployed App** | _Add your Render/Railway URL here once deployed — see [Deployment](#-deployment) below_ |
+| **Live Deployed App** | https://smartbank-queue-system.onrender.com/ |
 
 > ⚠️ Per the course project specification: **applications that are not deployed
 > are capped at 75% of the overall score**, regardless of functionality. The

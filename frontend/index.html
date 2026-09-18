@@ -17,7 +17,7 @@
 
 <div class="container" style="max-width:460px;">
   <div class="card">
-    <div class="tabs">
+    <div class="tabs" id="tabRow">
       <button class="tab-btn active" id="tabLogin" onclick="showTab('login')">Log In</button>
       <button class="tab-btn" id="tabRegister" onclick="showTab('register')">Register</button>
     </div>
@@ -60,6 +60,16 @@
       <button class="btn" type="submit">Create Account</button>
       <p id="regError" class="error-msg hidden"></p>
     </form>
+
+    <!-- VERIFY CODE (hidden until registration succeeds) -->
+    <form id="verifyForm" class="hidden">
+      <h2>Check your email</h2>
+      <p class="muted">We sent a 6-digit code to <strong id="verifyEmailDisplay"></strong>.</p>
+      <label>Verification code</label>
+      <input type="text" id="verifyCode" required maxlength="6" placeholder="123456" />
+      <button class="btn" type="submit">Verify &amp; Continue</button>
+      <p id="verifyError" class="error-msg hidden"></p>
+    </form>
   </div>
 </div>
 
@@ -70,9 +80,13 @@
     window.location.href = roleHome(existing.role);
   }
 
+  let pendingEmail = null;
+
   function showTab(tab) {
     document.getElementById("loginForm").classList.toggle("hidden", tab !== "login");
     document.getElementById("registerForm").classList.toggle("hidden", tab !== "register");
+    document.getElementById("verifyForm").classList.add("hidden");
+    document.getElementById("tabRow").classList.remove("hidden");
     document.getElementById("tabLogin").classList.toggle("active", tab === "login");
     document.getElementById("tabRegister").classList.toggle("active", tab === "register");
   }
@@ -107,16 +121,41 @@
     const errEl = document.getElementById("regError");
     clearMsg(errEl);
     try {
-      const data = await apiRequest("/auth/register", {
+      const email = document.getElementById("regEmail").value.trim();
+      await apiRequest("/auth/register", {
         method: "POST",
         auth: false,
         body: {
           username: document.getElementById("regName").value.trim(),
-          email: document.getElementById("regEmail").value.trim(),
+          email: email,
           phone: document.getElementById("regPhone").value.trim(),
           password: document.getElementById("regPassword").value,
           role: document.getElementById("regRole").value,
           signupCode: document.getElementById("regSignupCode").value,
+        },
+      });
+      // Registration succeeded - now show the verification step.
+      pendingEmail = email;
+      document.getElementById("registerForm").classList.add("hidden");
+      document.getElementById("tabRow").classList.add("hidden");
+      document.getElementById("verifyForm").classList.remove("hidden");
+      document.getElementById("verifyEmailDisplay").textContent = email;
+    } catch (err) {
+      showError(errEl, err.message);
+    }
+  });
+
+  document.getElementById("verifyForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const errEl = document.getElementById("verifyError");
+    clearMsg(errEl);
+    try {
+      const data = await apiRequest("/auth/verify", {
+        method: "POST",
+        auth: false,
+        body: {
+          email: pendingEmail,
+          code: document.getElementById("verifyCode").value.trim(),
         },
       });
       setSession(data.token, data.user);

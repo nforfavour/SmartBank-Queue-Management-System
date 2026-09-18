@@ -4,7 +4,7 @@
 const express = require("express");        //Imports the express framework used to create the web server and defines routes
 const { v4: uuidv4 } = require("uuid");    //Imports uuidv4 function to generate unique identifiers for queue entries
 const db = require("../db/db");            //Imports the database module to interact with the database
-const { authenticate, authorize } = require("../middleware/auth");  //Imports authentication and authorization middleware functions to protect certain routes
+const { authenticate, authorize } = require("../middleware/auth.js");  //Imports authentication and authorization middleware functions to protect certain routes
 const {
   getQueue,
   generateQueueNumber,

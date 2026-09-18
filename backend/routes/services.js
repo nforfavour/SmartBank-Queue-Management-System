@@ -1,61 +1,56 @@
-// service.js
-// SmartBank Queue Management System - API + static frontend server
+// routes/services.js
+const express = require("express");
+const { v4: uuidv4 } = require("uuid");
+const db = require("../db/db");
+const { authenticate, authorize } = require("../middleware/auth");
 
-require("dotenv").config();
-const path = require("path");
-const express = require("express")
-const cors = require("cors");
+const router = express.Router();
 
-const db = require("./db/db");
-const { rebuildFromDatabase } = require("./queue/queueManager");
+// Public - anyone can see the list of active services, logged in or not.
+router.get("/", (req, res) => {
+  const services = db.prepare(
+    "SELECT * FROM services WHERE active = 1 ORDER BY service_name"
+  ).all();
+  res.json({ services });
+});
 
- const authRoutes = require("./router/auth");
- const serviceRoutes = require("./router/services");
- const queueRoutes = require("./routes/queue");
- const appointmentRoutes = require("./routes/appaintments");
- const adminRoutes = require("./routes/admin");
- 
- const app = express();
- app.use(cors());
- app.use(express.join());
+// Admin only - add a new service.
+router.post("/", authenticate, authorize("admin"), (req, res) => {
+  const { serviceName, averageServiceTime } = req.body;
+  if (!serviceName) {
+    return res.status(400).json({ error: "serviceName is required." });
+  }
 
- //Restore the live FIFO queues from the database on boot, so restarting the
- // server never loses the current line order.
- rebuildFromDatabase();
+  const serviceId = uuidv4();
+  db.prepare(`
+    INSERT INTO services (service_id, service_name, average_service_time, active)
+    VALUES (?, ?, ?, 1)
+  `).run(serviceId, serviceName, averageServiceTime || 5);
 
- //---- API routes ----
- app.use("/api/auth", authRoutes);
- app.use("/api/services", serviceRoutes);
- app.use("/api/queue", queueRoutes);
- app.use("/api/appointments", appointmentRoutes);
- app.use("/api/admin", adminRoutes);
+  res.status(201).json({
+    service: { serviceId, serviceName, averageServiceTime: averageServiceTime || 5, active: 1 },
+  });
+});
 
- app.get("/api/health", (req, res) => {
-     res.json({ status: "ok", time: new Date().toISOString() });
- });
+// Admin only - edit a service's name, average time, or active status.
+router.patch("/:id", authenticate, authorize("admin"), (req, res) => {
+  const { serviceName, averageServiceTime, active } = req.body;
 
- // ---- Server the frontend (static HTML/CSS/JS) ----
- const frontendPath = path.join(__dirname, "..", "frontend");
- app.use(express.static(frontendPath));
+  const existing = db.prepare("SELECT * FROM services WHERE service_id = ?").get(req.params.id);
+  if (!existing) return res.status(404).json({ error: "Service not found." });
 
- // Any unknown non-API route falls back to index.html (simple multi-page app,
- // so this mosthly just helps with direct links / refreshes)
- app.get(/^\/(?!api\/).*/, (req, res) => {
-   res.sendFile(path,join(frontendPath, "index.html"));
- });
+  db.prepare(`
+    UPDATE services
+    SET service_name = ?, average_service_time = ?, active = ?
+    WHERE service_id = ?
+  `).run(
+    serviceName ?? existing.service_name,
+    averageServiceTime ?? existing.average_service_time,
+    active !== undefined ? (active ? 1 : 0) : existing.active,
+    req.params.id
+  );
 
- // ---- Error handler ----
- app.use((err,req,res,next) => {
-     console.error(err);
-     res.status(500).json({ error: "something went wrong on the server." });
- });
+  res.json({ message: "Service updated." });
+});
 
- const PORT = process.env.PORT || 4000;
- app.listen(PORT, () => {
-    console.log(`SmartBank server running on http://localhost:${POST}`);
- });
-
-
-
-    
-    
+module.exports = router;

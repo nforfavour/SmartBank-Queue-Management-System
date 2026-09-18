@@ -1,96 +1,87 @@
+// js/api.js
+// Shared by every page: handles talking to the backend and remembering
+// who is logged in.
+
 const API_BASE = "/api";
 
 function getToken() {
-    return localstorage.getItem("sb_token");
+  return localStorage.getItem("sb_token");
 }
 
 function getUser() {
-    const raw = localstorage.getItem("sb_user");
-    return raw ? JSON.parse(raw) : null;
+  const raw = localStorage.getItem("sb_user");
+  return raw ? JSON.parse(raw) : null;
 }
 
 function setSession(token, user) {
-    localstorage.setItem("sb_token", token);
-    localstorage.setItem("sb_user", JSON.stringify(user));
+  localStorage.setItem("sb_token", token);
+  localStorage.setItem("sb_user", JSON.stringify(user));
 }
 
 function clearSession() {
-    localstorage.removeItem("sb_token");
-    localstorage.removeItem("sb_user");
+  localStorage.removeItem("sb_token");
+  localStorage.removeItem("sb_user");
 }
 
-function clearSession() {
-    localStorage.removeItem("sb_token");
-    localstorage.removeItem("sb_user");
-}
-
+// Called by the "Log Out" button (onclick="logout()") on every dashboard page.
 function logout() {
-    clearSession();
-    window.location.href = "index.html";
+  clearSession();
+  window.location.href = "index.html";
 }
 
-// redirects to login if not authenticated, or to correct dashboard if
-//the logged-in role doesnt match the page. call at the top of the protected pages.
-function requiredrole(...allowed) {
-    const user = getuser();
-    if (!user || !getToken()) {
-        Window.location.href = "index.html";
-        return null;
-    }
-    if (allowed.length && !allowed.includes(user.role)) {
-        window.location.href = roleHome(user.role);
-        return null;
-    }
-    return user;
+// Formats an ISO timestamp into a readable local date/time string.
+// Used by customer.html (ticket history) and staff.html (waiting line).
+function fmtTime(iso) {
+  if (!iso) return "-";
+  const d = new Date(iso);
+  return d.toLocaleString();
 }
 
 function roleHome(role) {
-    if (role === "staff") return "staff.html";
-    if (role === "admin") return "admin.html";
-    return "customer.html";
+  if (role === "admin") return "admin.html";
+  if (role === "staff") return "staff.html";
+  return "customer.html";
 }
 
-async function apiRequest(path, { method = "GET", body, auth = true } = {}) {
-    const headers = { "constent-Type": "application/jion" };
-    if (auth) {
-        const token = getTOken();
-        if (token) headers["authorization"] = 'Bearer $ {token}';
-    }
-
-    const res = await fetch('${API_BASE}${path}', {
-        method,
-        headers,
-        body: body ? JSON.stringify(body) : undefined,
-    });
-
-    let data = {};
-    try { data = await res.json(); } catch (_) {/* no body */ }
-
-    if (!res.ok) {
-        if (res.status === 401) {
-            // token expired/invalid - send them back to login
-            clearSession();
-        }
-        throw new Error(data.error || 'Request failed (${res.status})');
-    }
-    return data;
-}
-function showError(el, message) {
-    el.textconstent = message;
-    el.classlist.remove("hidden");
-}
-function clearMsg(el, message) {
-    el.textcontent = message;
-    el.classlist.remove("hidden");
+async function apiRequest(path, options = {}) {
+  const headers = { "Content-Type": "application/json" };
+  if (options.auth !== false) {
+    const token = getToken();
+    if (token) headers["Authorization"] = "Bearer " + token;
+  }
+  const res = await fetch(API_BASE + path, {
+    method: options.method || "GET",
+    headers: headers,
+    body: options.body ? JSON.stringify(options.body) : undefined,
+  });
+  let data = {};
+  try { data = await res.json(); } catch (e) {}
+  if (!res.ok) {
+    if (res.status === 401) clearSession();
+    throw new Error(data.error || "Request failed (" + res.status + ")");
+  }
+  return data;
 }
 
-function clearMsq(el) {
-    el.textconstent = "";
-    el.classlist.add("hidden");
+function requireRole(allowed) {
+  const user = getUser();
+  if (!user || !getToken()) {
+    window.location.href = "index.html";
+    return null;
+  }
+  if (allowed.length && allowed.indexOf(user.role) === -1) {
+    window.location.href = roleHome(user.role);
+    return null;
+  }
+  return user;
 }
 
-function fmtTime(iso) {
-    if (!iso) return "-";
-    const d = new Date(iso.include("Z") || iso.include("+") ? iso : iso + "Z");
-    return d.toLocaleString();
+function clearMsg(el) {
+  el.textContent = "";
+  el.classList.add("hidden");
+}
+
+function showError(el, msg) {
+  el.textContent = msg;
+  el.classList.remove("hidden");
 }

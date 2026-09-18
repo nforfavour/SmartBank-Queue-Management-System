@@ -41,12 +41,6 @@ first-in-first-out order. Admins see everything happening across every service, 
 | **Link to GitHub Repository** | https://github.com/nforfavour/SmartBank-Queue-Management-System |
 | **Live Deployed App** | https://smartbank-queue-system.onrender.com/ |
 
-> ⚠️ Per the course project specification: **applications that are not deployed
-> are capped at 75% of the overall score**, regardless of functionality. The
-> live link above must be filled in and working before submission — see
-> [Deployment](#-deployment) for exact steps.
-
----
 
 ## 📖 Overview
 

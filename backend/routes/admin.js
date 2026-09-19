@@ -98,17 +98,29 @@ router.delete("/users/:id", (req, res) => {
   res.json({ message: "User removed." });
 });
 
-// Recent activity - admin.html expects { log: [...] }
 router.get("/queue-log", (req, res) => {
-  const rows = db.prepare(`
-    SELECT q.queue_number, s.service_name, u.username, q.status, q.booking_time
-    FROM queue q
-    JOIN services s ON s.service_id = q.service_id
-    JOIN users u ON u.user_id = q.customer_id
-    ORDER BY q.booking_time DESC
-    LIMIT 50
-  `).all();
+  const { date } = req.query;
+
+  const rows = date
+    ? db.prepare(`
+        SELECT q.queue_number, s.service_name, u.username, q.status, q.booking_time
+        FROM queue q
+        JOIN services s ON s.service_id = q.service_id
+        JOIN users u ON u.user_id = q.customer_id
+        WHERE date(q.booking_time) = ?
+        ORDER BY q.booking_time DESC
+      `).all(date)
+    : db.prepare(`
+        SELECT q.queue_number, s.service_name, u.username, q.status, q.booking_time
+        FROM queue q
+        JOIN services s ON s.service_id = q.service_id
+        JOIN users u ON u.user_id = q.customer_id
+        ORDER BY q.booking_time DESC
+        LIMIT 50
+      `).all();
+
   res.json({ log: rows });
 });
+
 
 module.exports = router;

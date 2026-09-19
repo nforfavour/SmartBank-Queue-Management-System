@@ -70,19 +70,20 @@
 
   <div class="card">
     <h3>Recent Queue Activity</h3>
+    <div style="display:flex; gap:8px; align-items:center; margin-bottom:12px;">
+      <label class="muted" style="margin:0;">Filter by date:</label>
+      <input type="date" id="logDateFilter" />
+      <button class="btn" id="applyDateFilter" style="margin:0;padding:6px 12px;font-size:0.85rem;">Filter</button>
+      <button class="btn secondary" id="clearDateFilter" style="margin:0;padding:6px 12px;font-size:0.85rem;">Clear</button>
+    </div>
     <table>
-      <thead> 
-        <tr>
-          <th>Ticket</th>
-          <th>Service</th>
-          <th>customer</th>
-          <th>status</th>
-        </tr>
+      <thead>
+        <tr><th>Ticket</th><th>Service</th><th>Customer</th><th>Status</th><th>Time</th></tr>
       </thead>
       <tbody id="logBody"></tbody>
     </table>
   </div>
-  </div>
+
 
 <script src="js/api.js"></script>
 <script>
@@ -200,17 +201,29 @@
     }
   });
 
-  async function loadLog() {
-    const { log } = await apiRequest("/admin/queue-log");
-    const body = document.getElementById("logBody");
-    body.innerHTML = "";
-    log.slice(0, 30).forEach(t => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `<td>${t.queue_number}</td><td>${t.service_name}</td><td>${t.username}</td>
-        <td><span class="badge ${t.status}">${t.status}</span></td><td>${fmtTime(t.booking_time)}</td>`;
-      body.appendChild(tr);
-    });
+  async function loadLog(date) {
+  const query = date ? `?date=${date}` : "";
+  const { log } = await apiRequest(`/admin/queue-log${query}`);
+  const body = document.getElementById("logBody");
+  body.innerHTML = "";
+  log.slice(0, 30).forEach(t => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${t.queue_number}</td><td>${t.service_name}</td><td>${t.username}</td>
+      <td><span class="badge ${t.status}">${t.status}</span></td><td>${fmtTime(t.booking_time)}</td>`;
+    body.appendChild(tr);
+  });
   }
+
+  document.getElementById("applyDateFilter").addEventListener("click", () => {
+  const date = document.getElementById("logDateFilter").value;
+  if (date) loadLog(date);
+  });
+
+  document.getElementById("clearDateFilter").addEventListener("click", () => {
+  document.getElementById("logDateFilter").value = "";
+  loadLog();
+  });
+
 
   loadStats();
   loadServices();

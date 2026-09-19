@@ -12,3 +12,7 @@ services:
         sync: false
       - key: ADMIN_SIGNUP_CODE
         sync: false
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASS
+        sync: false

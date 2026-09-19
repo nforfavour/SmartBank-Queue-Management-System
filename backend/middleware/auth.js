@@ -21,7 +21,6 @@ function authenticate(req, res, next) {
 }
 
 // Confirms the already-authenticated user's role is one of the allowed roles.
-// Usage: authorize("admin") or authorize("staff", "admin")
 function authorize(...allowedRoles) {
   return (req, res, next) => {
     if (!req.user || !allowedRoles.includes(req.user.role)) {

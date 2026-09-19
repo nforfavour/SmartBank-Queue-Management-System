@@ -2,18 +2,16 @@
 const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
-  host: "smtp-relay.brevo.com",
-  port: 587,
-  secure: false,
+  service: "gmail",
   auth: {
-    user: process.env.BREVO_SMTP_LOGIN,
-    pass: process.env.BREVO_SMTP_KEY,
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
   },
 });
 
 async function sendVerificationEmail(toEmail, code) {
   await transporter.sendMail({
-    from: `"SmartBank" <${process.env.BREVO_SMTP_LOGIN}>`,
+    from: `"SmartBank" <${process.env.EMAIL_USER}>`,
     to: toEmail,
     subject: "Your SmartBank verification code",
     text: `Your verification code is: ${code}\n\nEnter this code to finish creating your account.`,

@@ -53,6 +53,16 @@
       </div>
     </div>
     <div class="card">
+      <h3>All Registered Accounts</h3>
+      <table>
+        <thead>
+          <tr><th>Name</th><th>Email</th><th>Role</th><th>Joined</th><th></th></tr>
+        </thead>
+        <tbody id="allUsersBody"></tbody>
+      </table>
+    </div>
+
+    <div class="card">
         <h3>Manage Staff Accounts</h3>
         <div id="staffList"></div>
         <hr style="border:none;border-top:1px solid #eef0f4;margin:14px 0;">
@@ -213,6 +223,30 @@
     body.appendChild(tr);
   });
   }
+  async function loadAllUsers() {
+  const { users } = await apiRequest("/admin/users"); // no ?role filter = everyone
+  const body = document.getElementById("allUsersBody");
+  body.innerHTML = "";
+  users.forEach(u => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${u.username}</td>
+      <td>${u.email}</td>
+      <td><span class="badge">${u.role}</span></td>
+      <td>${fmtTime(u.created_at)}</td>
+      <td><button class="btn danger" style="margin:0;padding:4px 10px;font-size:0.8rem;" data-id="${u.user_id}" data-name="${u.username}">Remove</button></td>
+    `;
+    body.appendChild(tr);
+  });
+  body.querySelectorAll("button[data-id]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const confirmed = confirm(`Remove account "${btn.dataset.name}"? This cannot be undone.`);
+      if (!confirmed) return;
+      await apiRequest(`/admin/users/${btn.dataset.id}`, { method: "DELETE" });
+      loadAllUsers();
+    });
+  });
+}
 
   document.getElementById("applyDateFilter").addEventListener("click", () => {
   const date = document.getElementById("logDateFilter").value;
@@ -229,6 +263,7 @@
   loadServices();
   loadStaff();
   loadLog();
+  loadAllUsers();
   setInterval(loadStats, 15000);
 </script>
 </body>

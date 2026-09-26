@@ -20,6 +20,7 @@ first-in-first-out order. Admins see everything happening across every service, 
 [Tech Stack](#-tech-stack) •
 [Getting Started](#-getting-started) •
 [API Reference](#-api-reference) •
+[Known Gaps](#-known-gaps--in-progress-work) •
 [Testing](#-testing) •
 [Deployment](#-deployment) •
 [Troubleshooting](#-troubleshooting) •
@@ -41,7 +42,6 @@ first-in-first-out order. Admins see everything happening across every service, 
 | **Link to GitHub Repository** | https://github.com/nforfavour/SmartBank-Queue-Management-System |
 | **Live Deployed App** | https://smartbank-queue-system.onrender.com/ |
 
-
 ## 📖 Overview
 
 **SmartBank** replaces the physical act of standing in a bank line with a digital,
@@ -62,7 +62,7 @@ The system has **three roles**, each with its own dedicated screen:
 
 | Role | Who they are | What they do |
 |---|---|---|
-| 👤 **Customer** | Members of the public | Request a ticket, join the live queue, track their position, book appointments ahead of time |
+| 👤 **Customer** | Members of the public | Register/verify, request a ticket, join the live queue, track their position, book appointments ahead of time |
 | 👔 **Staff** | Bank employees at service counters | View their service's live queue, call the next customer, manage no-shows and skips |
 | 🛠️ **Admin** | Bank managers | View system-wide statistics, manage services, create/remove staff accounts |
 
@@ -76,6 +76,7 @@ The system has **three roles**, each with its own dedicated screen:
 - 📡 **Live status updates** — the customer's screen polls automatically, no page refresh needed
 - 📅 **Appointment booking** — customers can book ahead and check in later, skipping straight into the live queue
 - 🔐 **Role-based authentication** — secure JWT-based login with strict customer / staff / admin permission boundaries
+- ✉️ **Email verification (in progress)** — the backend can send a 6-digit verification code by email via `utils/mailer.js`, and the registration screen already asks for the code; wiring this fully into `/auth/register` is the next milestone (see [Known Gaps](#-known-gaps--in-progress-work))
 - 📊 **Admin analytics dashboard** — daily totals, per-service performance, and average wait times
 - 💾 **Zero-config database** — SQLite via `better-sqlite3`; the entire database lives in one file, no separate server needed
 - 🐳 **Deployment-ready** — includes a `Dockerfile` and `render.yaml` for one-click hosting
@@ -90,6 +91,7 @@ The system has **three roles**, each with its own dedicated screen:
 | **Backend** | Node.js, Express.js |
 | **Database** | SQLite (via `better-sqlite3`) |
 | **Authentication** | JSON Web Tokens (`jsonwebtoken`) + `bcryptjs` password hashing |
+| **Email** | `nodemailer` (Gmail transport) for verification-code emails |
 | **Deployment** | Docker, Render.com / Railway |
 
 ---
@@ -97,12 +99,12 @@ The system has **three roles**, each with its own dedicated screen:
 ## 🗂️ Project Structure
 
 ```
-smartbank-queue-system/
+SmartBank - Digital Queue Management System/
 │
 ├── backend/
 │   ├── db/
 │   │   ├── db.js              # Database connection + table schema
-│   │   └── seed.js            # Seeds starter admin/staff accounts + services
+│   │   └── seed.js            # Seeds the starter list of banking services
 │   │
 │   ├── middleware/
 │   │   └── auth.js            # JWT authentication + role authorization
@@ -112,11 +114,14 @@ smartbank-queue-system/
 │   │   └── queueManager.js    # One FIFOQueue instance per banking service
 │   │
 │   ├── routes/
-│   │   ├── auth.js            # Register / login
+│   │   ├── auth.js            # Register / login / me
 │   │   ├── services.js        # List / manage banking services
 │   │   ├── queue.js           # Ticket lifecycle + staff queue actions
 │   │   ├── appointments.js    # Book-ahead + check-in
 │   │   └── admin.js           # Stats, staff accounts, activity log
+│   │
+│   ├── utils/
+│   │   └── mailer.js          # Nodemailer transport + sendVerificationEmail()
 │   │
 │   ├── server.js              # Application entry point
 │   ├── package.json
@@ -124,9 +129,9 @@ smartbank-queue-system/
 │   └── .env                   # Your local secrets (never committed)
 │
 ├── frontend/
-│   ├── css/style.css          # All visual styling
+│   ├── css/style.css          # All visual styling (navy/blue/gold theme)
 │   ├── js/api.js              # Shared fetch/session helper used by every page
-│   ├── index.html             # Login / registration
+│   ├── index.html             # Login / Registration / Verify-code screen
 │   ├── customer.html          # Customer portal
 │   ├── staff.html             # Staff dashboard
 │   └── admin.html             # Admin dashboard
@@ -185,6 +190,8 @@ cp .env.example .env
 | `DB_PATH` | Where the SQLite database file is created | `./db/smartbank.sqlite` |
 | `STAFF_SIGNUP_CODE` | Secret code required to register as Staff — **change this** | `a-secret-code` |
 | `ADMIN_SIGNUP_CODE` | Secret code required to register as Admin — **change this** | `a-different-secret-code` |
+| `EMAIL_USER` | Gmail address `utils/mailer.js` sends verification codes from | `yourproject@gmail.com` |
+| `EMAIL_PASS` | Gmail **App Password** for that account (not your normal password) | `xxxxxxxxxxxxxxxx` |
 
 > ⚠️ **Never commit your real `.env` file.** It's already listed in `.gitignore`
 > — only `.env.example` (with placeholder values) should ever be pushed to GitHub.
@@ -222,25 +229,26 @@ page.
 
 - **Customers** register normally, no code needed.
 - **Staff/Admin** select their role at registration and must enter the
-  matching secret code (`STF-194` / `ADM-194` from your
+  matching secret code (`STAFF_SIGNUP_CODE` / `ADMIN_SIGNUP_CODE` from your
   `.env`). This is what stops a random visitor from granting themselves
   bank-employee access — only people your team gives the code to can become
   Staff or Admin.
+- After registering, the login page currently shows a **"Check your email"**
+  verification-code screen — see [Known Gaps](#-known-gaps--in-progress-work)
+  below, this step is not fully wired up on the backend yet.
 
 ---
 
 ## 📡 API Reference
 
-All endpoints are prefixed with `/api`. Full request/response details live in
-[`docs/API.md`](docs/API.md) *(create this if you want a dedicated API doc — see
-note at the end of this README)*. Summary:
+All endpoints are prefixed with `/api`. Summary:
 
 <details>
 <summary><strong>Auth & Services</strong></summary>
 
 | Method | Endpoint | Access | Description |
 |---|---|---|---|
-| POST | `/auth/register` | Public | Create a customer account |
+| POST | `/auth/register` | Public | Create an account (customer, or staff/admin with a signup code) |
 | POST | `/auth/login` | Public | Log in, returns a JWT |
 | GET | `/auth/me` | Authenticated | Get current user's details |
 | GET | `/services` | Public | List active banking services |
@@ -321,8 +329,32 @@ If the server restarts, every "Waiting" ticket is automatically restored to
 its correct position from the database — no one loses their place in line.
 
 For a full line-by-line explanation of the codebase, see the project's
-companion teaching documents (Beginner's Guide + Code Walkthrough) shared
-alongside this repository.
+companion **Code Walkthrough** document shared alongside this repository.
+
+---
+
+## 🛠 Known Gaps / In-Progress Work
+
+Being upfront about this in the report matters more than hiding it — an
+examiner who runs the app and hits an error is far more forgiving if the
+README already flags it as known and in progress.
+
+- **Email verification is half-wired.** The database has `email_verified` and
+  `verification_code` columns (added in `db/db.js`), and `utils/mailer.js`
+  already knows how to send a 6-digit code by email. `frontend/index.html`
+  already shows a "Check your email" screen and calls `POST /auth/verify`
+  after registering — but **`routes/auth.js` does not yet define a `/verify`
+  route**, and `/auth/register` does not yet generate a code or call
+  `sendVerificationEmail()`. Right now, submitting the verification form will
+  fail. Finishing this is the next task: generate a random code at
+  registration, store it in `verification_code`, email it via
+  `sendVerificationEmail()`, and add a `POST /auth/verify` route that checks
+  the code, sets `email_verified = 1`, and issues the JWT.
+- **No automated test suite yet** (see [Testing](#-testing) below) — required
+  before submission per the course spec.
+- **Gmail credentials in `.env.example`** should be replaced with a project
+  mailbox and a Gmail **App Password** (not a real personal password) before
+  going further with this feature.
 
 ---
 
@@ -335,8 +367,7 @@ for JavaScript projects.
 
 > ⚠️ **Current status: no automated test suite exists in this repository
 > yet.** This is a required deliverable, not optional documentation — it
-> needs to be added before submission. The steps below get a real Jest suite
-> running against the actual API.
+> needs to be added before submission.
 
 **To add it:**
 
@@ -416,9 +447,7 @@ docs/
   a starting point for Chapter Three's system design section.
 - **UML Diagrams** — use case diagram, class diagram, and at least 5
   sequence diagrams (e.g. customer joins queue, staff calls next, login,
-  appointment check-in, admin views stats — see [How It Works](#-how-it-works-high-level)
-  and the flow diagrams in the companion Code Walkthrough guide for a head
-  start on each).
+  appointment check-in, admin views stats).
 - **Presentation (15%)** — no more than 20 slides.
 
 ---
@@ -433,10 +462,13 @@ This project is ready to deploy as-is:
 
 **Before deploying:**
 
-1. Set the environment variables listed above in your hosting provider's dashboard
-   (never rely on a committed `.env` file in production).
-2. Generate a strong, random `JWT_SECRET` — do not reuse the local development value.
-3. Change the default admin/staff passwords immediately after your first deploy.
+1. Set the environment variables listed above (including `EMAIL_USER` /
+   `EMAIL_PASS`) in your hosting provider's dashboard — never rely on a
+   committed `.env` file in production.
+2. Generate a strong, random `JWT_SECRET` — do not reuse the local
+   development value (`render.yaml` can auto-generate this for you).
+3. Change the default admin/staff passwords immediately after your first
+   deploy.
 
 ---
 
@@ -449,6 +481,8 @@ This project is ready to deploy as-is:
 | `Cannot find module 'dotenv'` (or similar) | `npm install` failed silently, often on newer Node versions | Delete `node_modules` and `package-lock.json`, switch to Node 18/20 LTS, run `npm install` again |
 | Native build errors during `npm install` | `better-sqlite3` needs to compile native code | Use Node 18 or 20 LTS rather than the very latest Node version |
 | Port already in use | Another process is using port 4000 | Change `PORT` in `.env`, or stop the other process |
+| "Verification code" screen doesn't work after registering | `/auth/verify` isn't implemented on the backend yet | See [Known Gaps](#-known-gaps--in-progress-work) |
+| Nodemailer errors on startup or when sending mail | Missing/incorrect `EMAIL_USER` / `EMAIL_PASS`, or Gmail blocking the login | Use a Gmail **App Password**, not your normal account password (requires 2-Step Verification enabled on the Gmail account) |
 
 ---
 
@@ -477,8 +511,6 @@ Please avoid committing directly to `main`.
 | 2 | _Nteban Christel Javnyuy_ | _ICTU20251351_ | _e.g. Frontend_ | _@ntebanjavnyuy_ |
 | 3 | _Tameu Penlap Jude Elysee_ | _ICTU2025----_ | _e.g. Database_ | _@judexnnn_ |
 | 4 | _Tiomela Tatsabong Britney_ | _ICTU2025----_ | _e.g. Documentation_ | _@tiomelabritney-star_ |
-
-
 
 ---
 

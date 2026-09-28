@@ -35,7 +35,7 @@ first-in-first-out order. Admins see everything happening across every service, 
 | Field | Detail |
 |---|---|
 | **Course Code / Title** | ICT 2140 — Introduction to Software Engineering |
-| **Group Number** | _#_ |
+| **Group Number** | _10_ |
 | **Project Topic** | SmartBank — Digital Queue Management System |
 | **Scrum Master** | _Nfor Divine Favour Nfor_ |
 | **Product Owner** | _Nteban Christel Javnyuy_ |
@@ -193,8 +193,6 @@ cp .env.example .env
 | `EMAIL_USER` | Gmail address `utils/mailer.js` sends verification codes from | `yourproject@gmail.com` |
 | `EMAIL_PASS` | Gmail **App Password** for that account (not your normal password) | `xxxxxxxxxxxxxxxx` |
 
-> ⚠️ **Never commit your real `.env` file.** It's already listed in `.gitignore`
-> — only `.env.example` (with placeholder values) should ever be pushed to GitHub.
 
 ### 4. Seed the database
 
@@ -223,9 +221,6 @@ Visit **[http://localhost:4000](http://localhost:4000)** in your browser.
 
 ### Account registration — no default logins
 
-There are **no pre-created accounts**. Everyone — Customer, Staff, and Admin
-alike — creates their own account from the **Register** tab on the login
-page.
 
 - **Customers** register normally, no code needed.
 - **Staff/Admin** select their role at registration and must enter the
@@ -335,9 +330,6 @@ companion **Code Walkthrough** document shared alongside this repository.
 
 ## 🛠 Known Gaps / In-Progress Work
 
-Being upfront about this in the report matters more than hiding it — an
-examiner who runs the app and hits an error is far more forgiving if the
-README already flags it as known and in progress.
 
 - **Email verification is half-wired.** The database has `email_verified` and
   `verification_code` columns (added in `db/db.js`), and `utils/mailer.js`
@@ -365,9 +357,6 @@ application using a testing framework appropriate to their tech stack, doing
 either white-box or black-box testing — with **Jest** given as the example
 for JavaScript projects.
 
-> ⚠️ **Current status: no automated test suite exists in this repository
-> yet.** This is a required deliverable, not optional documentation — it
-> needs to be added before submission.
 
 **To add it:**
 
@@ -421,34 +410,6 @@ npm test
 Once real tests exist, briefly describe your testing approach (what's
 covered, white-box vs. black-box, how to run it) in your project report's
 **Chapter Three — Test Case document** section.
-
----
-
-## 📑 Other Required Deliverables
-
-Per the course project specification, the GitHub repo is only one part of
-what's submitted. Keep the rest of the deliverables in the repo too, so
-everything is in one place for grading:
-
-```
-docs/
-├── SmartBank_Project_Report.pdf   # Full report (Chapters 1-5, using the
-│                                   # course's Project Report Template)
-├── SmartBank_Presentation.pptx    # Max 20 slides
-└── uml/
-    ├── use-case-diagram.png
-    ├── class-diagram.png
-    └── sequence-diagrams/         # At least 5 sequence diagrams
-```
-
-- **Report (25%)** — Chapters 1–5 as specified (Introduction, Literature
-  Review, Methodology & Materials, Results & Discussion, Recommendations &
-  Conclusion). Include this README's architecture diagram and API table as
-  a starting point for Chapter Three's system design section.
-- **UML Diagrams** — use case diagram, class diagram, and at least 5
-  sequence diagrams (e.g. customer joins queue, staff calls next, login,
-  appointment check-in, admin views stats).
-- **Presentation (15%)** — no more than 20 slides.
 
 ---
 
@@ -509,8 +470,8 @@ Please avoid committing directly to `main`.
 |---|---|---|---|---|
 | 1 | _Nfor Divine Favour Nfor_ | _ICTU20251213_ | _e.g. Backend_ | _@nforfavour_ |
 | 2 | _Nteban Christel Javnyuy_ | _ICTU20251351_ | _e.g. Frontend_ | _@ntebanjavnyuy_ |
-| 3 | _Tameu Penlap Jude Elysee_ | _ICTU2025----_ | _e.g. Database_ | _@judexnnn_ |
-| 4 | _Tiomela Tatsabong Britney_ | _ICTU2025----_ | _e.g. Documentation_ | _@tiomelabritney-star_ |
+| 3 | _Tameu Penlap Jude Elysee_ | _ICTU20251290_ | _e.g. Database_ | _@judexnnn_ |
+| 4 | _Tiomela Tatsabong Britney_ | _ICTU20251265_ | _e.g. Documentation_ | _@tiomelabritney-star_ |
 
 ---
 

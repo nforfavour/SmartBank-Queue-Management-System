@@ -16,6 +16,4 @@ services:
         sync: false
       - key: EMAIL_PASS
         sync: false
-      - key: JWT_SECRET
-        generateValue: true
 

@@ -130,35 +130,53 @@
     });
   }
 
-  async function loadServices() {
-  const { services } = await apiRequest("/services", { auth: false });
-  const list = document.getElementById("serviceList");
-  list.innerHTML = "";
-  services.forEach(s => {
-    const row = document.createElement("div");
-    row.style.display = "flex";
-    row.style.alignItems = "center";
-    row.style.gap = "8px";
-    row.style.marginBottom = "6px";
-    row.innerHTML = `
-      <span class="muted" style="flex:1;">${s.service_name}</span>
-      <input type="number" min="1" value="${s.average_service_time}" style="width:70px;" data-id="${s.service_id}" class="edit-time-input" />
-      <button class="btn" style="margin:0;padding:4px 10px;font-size:0.8rem;" data-id="${s.service_id}">Save</button>
-    `;
-    list.appendChild(row);
-  });
-  list.querySelectorAll("button[data-id]").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      const input = list.querySelector(`.edit-time-input[data-id="${btn.dataset.id}"]`);
-      const newTime = parseInt(input.value, 10);
-      await apiRequest(`/services/${btn.dataset.id}`, {
-        method: "PATCH",
-        body: { averageServiceTime: newTime },
-      });
-      loadServices();
+    async function loadServices() {
+    const { services } = await apiRequest("/services", { auth: false });
+    const list = document.getElementById("serviceList");
+    list.innerHTML = "";
+    services.forEach(s => {
+      const row = document.createElement("div");
+      row.style.display = "flex";
+      row.style.alignItems = "center";
+      row.style.gap = "8px";
+      row.style.marginBottom = "6px";
+      row.innerHTML = `
+        <span class="muted" style="flex:1;">${s.service_name}</span>
+        <input type="number" min="1" value="${s.average_service_time}" style="width:70px;" data-id="${s.service_id}" class="edit-time-input" />
+        <button class="btn" style="margin:0;padding:4px 10px;font-size:0.8rem;" data-id="${s.service_id}">Save</button>
+        <button class="btn danger" style="margin:0;padding:4px 10px;font-size:0.8rem;" data-remove-id="${s.service_id}" data-name="${s.service_name}">Remove</button>
+      `;
+      list.appendChild(row);
     });
-  });
-}
+
+    // Save average time
+    list.querySelectorAll("button[data-id]").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const input = list.querySelector(`.edit-time-input[data-id="${btn.dataset.id}"]`);
+        const newTime = parseInt(input.value, 10);
+        await apiRequest(`/services/${btn.dataset.id}`, {
+          method: "PATCH",
+          body: { averageServiceTime: newTime },
+        });
+        loadServices();
+      });
+    });
+
+    // Remove service
+    list.querySelectorAll("button[data-remove-id]").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        if (!confirm(`Remove service "${btn.dataset.name}"? Customers will no longer be able to select it.`)) return;
+        try {
+          await apiRequest(`/services/${btn.dataset.removeId}`, { method: "DELETE" });
+          loadServices();
+          loadStats();
+        } catch (err) {
+          document.getElementById("serviceMsg").textContent = err.message;
+        }
+      });
+    });
+  }
+
 
 
   document.getElementById("addServiceBtn").addEventListener("click", async () => {

@@ -53,4 +53,26 @@ router.patch("/:id", authenticate, authorize("admin"), (req, res) => {
   res.json({ message: "Service updated." });
 });
 
+// Admin only - remove a service (hidden, history kept).
+router.delete("/:id", authenticate, authorize("admin"), (req, res) => {
+  const existing = db.prepare(
+    "SELECT * FROM services WHERE service_id = ? AND active = 1"
+  ).get(req.params.id);
+  if (!existing) return res.status(404).json({ error: "Service not found." });
+
+  const busy = db.prepare(`
+    SELECT COUNT(*) AS c FROM queue
+    WHERE service_id = ? AND status IN ('Waiting','Called','InService')
+  `).get(req.params.id).c;
+  if (busy > 0) {
+    return res.status(400).json({
+      error: `Cannot remove: ${busy} customer(s) still in this service's queue.`,
+    });
+  }
+
+  db.prepare("UPDATE services SET active = 0 WHERE service_id = ?").run(req.params.id);
+  res.json({ message: "Service removed." });
+});
+
+
 module.exports = router;

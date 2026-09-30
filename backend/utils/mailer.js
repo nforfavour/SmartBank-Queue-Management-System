@@ -2,6 +2,11 @@
 
 const nodemailer = require("nodemailer");
 
+
+// ======================================================
+// GMAIL TRANSPORTER
+// ======================================================
+
 const transporter = nodemailer.createTransport({
 
   service: "gmail",
@@ -12,6 +17,11 @@ const transporter = nodemailer.createTransport({
   }
 
 });
+
+
+// ======================================================
+// CHECK GMAIL CONNECTION
+// ======================================================
 
 transporter.verify((error, success) => {
 
@@ -33,64 +43,79 @@ transporter.verify((error, success) => {
 
 });
 
+
+// ======================================================
+// SEND VERIFICATION EMAIL
+// ======================================================
+
 async function sendVerificationEmail(
   toEmail,
   code
 ) {
 
-  const info = await transporter.sendMail({
+  const info =
+    await transporter.sendMail({
 
-    from:
-      `"SmartBank" <${process.env.EMAIL_USER}>`,
+      from:
+        `"SmartBank" <${process.env.EMAIL_USER}>`,
 
-    to: toEmail,
+      to: toEmail,
 
-    subject:
-      "SmartBank - Email Verification Code",
+      subject:
+        "SmartBank - Email Verification Code",
 
-    text:
-      `Your SmartBank verification code is: ${code}
+      text:
+        `Your SmartBank verification code is: ${code}
 
-Enter this code in SmartBank to verify your email address.`,
+Enter this code in SmartBank to complete your registration.
 
-    html: `
+If you did not create this account, you can ignore this email.`,
 
-      <div style="
-        font-family: Arial, sans-serif;
-        padding: 20px;
-      ">
+      html: `
 
-        <h2>SmartBank Email Verification</h2>
-
-        <p>
-          Thank you for registering with SmartBank.
-        </p>
-
-        <p>
-          Your 6-digit verification code is:
-        </p>
-
-        <h1 style="
-          letter-spacing: 8px;
+        <div style="
+          font-family: Arial, sans-serif;
+          max-width: 600px;
+          margin: auto;
+          padding: 30px;
         ">
-          ${code}
-        </h1>
 
-        <p>
-          Enter this code in the SmartBank application
-          to complete your registration.
-        </p>
+          <h2>
+            SmartBank Email Verification
+          </h2>
 
-        <p>
-          If you did not create this account,
-          you can ignore this email.
-        </p>
+          <p>
+            Thank you for registering with SmartBank.
+          </p>
 
-      </div>
+          <p>
+            Your 6-digit verification code is:
+          </p>
 
-    `
+          <div style="
+            font-size: 32px;
+            font-weight: bold;
+            letter-spacing: 8px;
+            margin: 25px 0;
+          ">
+            ${code}
+          </div>
 
-  });
+          <p>
+            Enter this code in SmartBank
+            to complete your registration.
+          </p>
+
+          <p>
+            If you did not create this account,
+            you can ignore this email.
+          </p>
+
+        </div>
+
+      `
+
+    });
 
 
   console.log(
@@ -100,6 +125,16 @@ Enter this code in SmartBank to verify your email address.`,
   console.log(
     "[MAIL] Recipient:",
     toEmail
+  );
+
+  console.log(
+    "[MAIL] Accepted:",
+    info.accepted
+  );
+
+  console.log(
+    "[MAIL] Rejected:",
+    info.rejected
   );
 
   console.log(

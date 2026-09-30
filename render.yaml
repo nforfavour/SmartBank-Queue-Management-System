@@ -6,14 +6,19 @@ services:
     envVars:
       - key: JWT_SECRET
         generateValue: true
+
       - key: JWT_EXPIRES_IN
         value: 8h
+
       - key: STAFF_SIGNUP_CODE
         sync: false
+
       - key: ADMIN_SIGNUP_CODE
         sync: false
+
       - key: EMAIL_USER
         sync: false
+
       - key: EMAIL_PASS
         sync: false
 

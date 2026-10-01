@@ -35,7 +35,7 @@ first-in-first-out order. Admins see everything happening across every service, 
 | Field | Detail |
 |---|---|
 | **Course Code / Title** | ICT 2140 — Introduction to Software Engineering |
-| **Group Number** | _10_ |
+| **Group Number** | _17_ |
 | **Project Topic** | SmartBank — Digital Queue Management System |
 | **Scrum Master** | _Nfor Divine Favour Nfor_ |
 | **Product Owner** | _Nteban Christel Javnyuy_ |
@@ -468,10 +468,10 @@ Please avoid committing directly to `main`.
 
 | SN | Member's Name | Registration Number | Team Role | GitHub |
 |---|---|---|---|---|
-| 1 | _Nfor Divine Favour Nfor_ | _ICTU20251213_ | _e.g. Backend_ | _@nforfavour_ |
-| 2 | _Nteban Christel Javnyuy_ | _ICTU20251351_ | _e.g. Frontend_ | _@ntebanjavnyuy_ |
-| 3 | _Tameu Penlap Jude Elysee_ | _ICTU20251290_ | _e.g. Database_ | _@judexnnn_ |
-| 4 | _Tiomela Tatsabong Britney_ | _ICTU20251265_ | _e.g. Documentation_ | _@tiomelabritney-star_ |
+| 1 | _Nfor Divine Favour Nfor_ | _ICTU20251213_ | _Scrum Master_ | _@nforfavour_ |
+| 2 | _Nteban Christel Javnyuy_ | _ICTU20251351_ | _Product Owner_ | _@ntebanjavnyuy_ |
+| 3 | _Tameu Penlap Jude Elysee_ | _ICTU20251290_ | _CTO_ | _@judexnnn_ |
+| 4 | _Tiomela Tatsabong Britney_ | _ICTU20251265_ | _CFO_ | _@tiomelabritney-star_ |
 
 ---
 

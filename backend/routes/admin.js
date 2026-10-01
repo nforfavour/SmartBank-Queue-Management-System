@@ -72,7 +72,8 @@ router.post("/users", (req, res) => {
     return res.status(400).json({ error: "role must be staff or admin." });
   }
 
-  const existing = db.prepare("SELECT user_id FROM users WHERE email = ?").get(email);
+  const cleanEmail = String(email).trim().toLowerCase();
+  const existing = db.prepare("SELECT user_id FROM users WHERE email = ?").get(cleanEmail);
   if (existing) {
     return res.status(409).json({ error: "An account with this email already exists." });
   }
@@ -81,12 +82,12 @@ router.post("/users", (req, res) => {
   const hash = bcrypt.hashSync(password, 10);
 
   db.prepare(`
-    INSERT INTO users (user_id, username, email, password_hash, role)
-    VALUES (?, ?, ?, ?, ?)
-  `).run(userId, username, email, hash, finalRole);
+    INSERT INTO users (user_id, username, email, password_hash, role, email_verified)
+    VALUES (?, ?, ?, ?, ?, 1)
+  `).run(userId, String(username).trim(), cleanEmail, hash, finalRole);
 
   res.status(201).json({
-    user: { userId, username, email, role: finalRole },
+    user: { userId, username, email: cleanEmail, role: finalRole },
   });
 });
 

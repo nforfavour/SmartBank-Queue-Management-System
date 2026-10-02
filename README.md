@@ -85,7 +85,7 @@ The system has **three roles**, each with its own dedicated screen:
 | **Backend** | Node.js, Express.js |
 | **Database** | SQLite (via `better-sqlite3`) |
 | **Authentication** | JSON Web Tokens (`jsonwebtoken`) + `bcryptjs` password hashing |
-| **Email** | Brevo HTTP API (`fetch`) for verification-code emails |
+| **Email** | `nodemailer` (Gmail transport) for verification-code emails |
 | **Deployment** | Docker, Render.com / Railway |
 
 ---
@@ -115,7 +115,7 @@ SmartBank - Digital Queue Management System/
 │   │   └── admin.js           # Stats, staff accounts, activity log
 │   │
 │   ├── utils/
-│   │   └── mailer.js          # Brevo API client + sendVerificationEmail()
+│   │   └── mailer.js          # Nodemailer transport + sendVerificationEmail()
 │   │
 │   ├── server.js              # Application entry point
 │   ├── package.json
@@ -184,9 +184,8 @@ cp .env.example .env
 | `DB_PATH` | Where the SQLite database file is created | `./db/smartbank.sqlite` |
 | `STAFF_SIGNUP_CODE` | Secret code required to register as Staff — **change this** | `a-secret-code` |
 | `ADMIN_SIGNUP_CODE` | Secret code required to register as Admin — **change this** | `a-different-secret-code` |
-| `BREVO_API_KEY` | Brevo API key (SMTP & API → API Keys). Leave empty in dev to print codes in the terminal | `xkeysib-...` |
-| `BREVO_SENDER_EMAIL` | Sender address **verified** in Brevo | `yourproject@gmail.com` |
-| `BREVO_SENDER_NAME` | Display name on the email (optional) | `SmartBank` |
+| `EMAIL_USER` | Gmail address `utils/mailer.js` sends verification codes from | `yourproject@gmail.com` |
+| `EMAIL_PASS` | Gmail **App Password** for that account (not your normal password) | `xxxxxxxxxxxxxxxx` |
 
 
 ### 4. Seed the database
@@ -240,6 +239,9 @@ All endpoints are prefixed with `/api`. Summary:
 |---|---|---|---|
 | POST | `/auth/register` | Public | Create an account (customer, or staff/admin with a signup code) |
 | POST | `/auth/login` | Public | Log in, returns a JWT |
+| POST | `/auth/verify` | Public | Confirm the 6-digit e-mail verification code, returns a JWT |
+| POST | `/auth/forgot-password` | Public | E-mail a 6-digit password-reset code (valid 10 minutes) |
+| POST | `/auth/reset-password` | Public | Check the reset code and set a new password |
 | GET | `/auth/me` | Authenticated | Get current user's details |
 | GET | `/services` | Public | List active banking services |
 | POST | `/services` | Admin | Add a new service |
@@ -326,8 +328,22 @@ companion **Code Walkthrough** document shared alongside this repository.
 ## 🛠 Known Gaps / In-Progress Work
 
 
+- **Email verification is half-wired.** The database has `email_verified` and
+  `verification_code` columns (added in `db/db.js`), and `utils/mailer.js`
+  already knows how to send a 6-digit code by email. `frontend/index.html`
+  already shows a "Check your email" screen and calls `POST /auth/verify`
+  after registering — but **`routes/auth.js` does not yet define a `/verify`
+  route**, and `/auth/register` does not yet generate a code or call
+  `sendVerificationEmail()`. Right now, submitting the verification form will
+  fail. Finishing this is the next task: generate a random code at
+  registration, store it in `verification_code`, email it via
+  `sendVerificationEmail()`, and add a `POST /auth/verify` route that checks
+  the code, sets `email_verified = 1`, and issues the JWT.
 - **No automated test suite yet** (see [Testing](#-testing) below) — required
   before submission per the course spec.
+- **Gmail credentials in `.env.example`** should be replaced with a project
+  mailbox and a Gmail **App Password** (not a real personal password) before
+  going further with this feature.
 
 ---
 
@@ -404,8 +420,8 @@ This project is ready to deploy as-is:
 
 **Before deploying:**
 
-1. Set the environment variables listed above (including `BREVO_API_KEY` /
-   `BREVO_SENDER_EMAIL`) in your hosting provider's dashboard — never rely on a
+1. Set the environment variables listed above (including `EMAIL_USER` /
+   `EMAIL_PASS`) in your hosting provider's dashboard — never rely on a
    committed `.env` file in production.
 2. Generate a strong, random `JWT_SECRET` — do not reuse the local
    development value (`render.yaml` can auto-generate this for you).
@@ -424,7 +440,7 @@ This project is ready to deploy as-is:
 | Native build errors during `npm install` | `better-sqlite3` needs to compile native code | Use Node 18 or 20 LTS rather than the very latest Node version |
 | Port already in use | Another process is using port 4000 | Change `PORT` in `.env`, or stop the other process |
 | "Verification code" screen doesn't work after registering | `/auth/verify` isn't implemented on the backend yet | See [Known Gaps](#-known-gaps--in-progress-work) |
-| Register hangs / "verification email could not be sent" on Render | Render's free plan blocks SMTP; or `BREVO_API_KEY` / `BREVO_SENDER_EMAIL` missing, or the sender isn't verified in Brevo | Use the Brevo API (already done), set both variables in Render → Environment, verify the sender in Brevo, and read the Render logs for the `Brevo API error` line |
+| Nodemailer errors on startup or when sending mail | Missing/incorrect `EMAIL_USER` / `EMAIL_PASS`, or Gmail blocking the login | Use a Gmail **App Password**, not your normal account password (requires 2-Step Verification enabled on the Gmail account) |
 
 ---
 

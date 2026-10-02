@@ -7,12 +7,6 @@
 Customers get a live queue number from their phone. Staff serve people in a guaranteed
 first-in-first-out order. Admins see everything happening across every service, in real time.
 
-[![Node.js](https://img.shields.io/badge/Node.js-18%2B-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
-[![Express](https://img.shields.io/badge/Express-4.x-000000?logo=express&logoColor=white)](https://expressjs.com/)
-[![SQLite](https://img.shields.io/badge/SQLite-better--sqlite3-003B57?logo=sqlite&logoColor=white)](https://github.com/WiseLibs/better-sqlite3)
-[![JWT](https://img.shields.io/badge/Auth-JWT-black?logo=jsonwebtokens)](https://jwt.io/)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](#-license)
-[![Status](https://img.shields.io/badge/Status-Active%20Development-yellow)](#)
 
 [Course Info](#-course-project-information) •
 [Overview](#-overview) •
@@ -91,7 +85,7 @@ The system has **three roles**, each with its own dedicated screen:
 | **Backend** | Node.js, Express.js |
 | **Database** | SQLite (via `better-sqlite3`) |
 | **Authentication** | JSON Web Tokens (`jsonwebtoken`) + `bcryptjs` password hashing |
-| **Email** | `nodemailer` (Gmail transport) for verification-code emails |
+| **Email** | Brevo HTTP API (`fetch`) for verification-code emails |
 | **Deployment** | Docker, Render.com / Railway |
 
 ---
@@ -121,7 +115,7 @@ SmartBank - Digital Queue Management System/
 │   │   └── admin.js           # Stats, staff accounts, activity log
 │   │
 │   ├── utils/
-│   │   └── mailer.js          # Nodemailer transport + sendVerificationEmail()
+│   │   └── mailer.js          # Brevo API client + sendVerificationEmail()
 │   │
 │   ├── server.js              # Application entry point
 │   ├── package.json
@@ -190,8 +184,9 @@ cp .env.example .env
 | `DB_PATH` | Where the SQLite database file is created | `./db/smartbank.sqlite` |
 | `STAFF_SIGNUP_CODE` | Secret code required to register as Staff — **change this** | `a-secret-code` |
 | `ADMIN_SIGNUP_CODE` | Secret code required to register as Admin — **change this** | `a-different-secret-code` |
-| `EMAIL_USER` | Gmail address `utils/mailer.js` sends verification codes from | `yourproject@gmail.com` |
-| `EMAIL_PASS` | Gmail **App Password** for that account (not your normal password) | `xxxxxxxxxxxxxxxx` |
+| `BREVO_API_KEY` | Brevo API key (SMTP & API → API Keys). Leave empty in dev to print codes in the terminal | `xkeysib-...` |
+| `BREVO_SENDER_EMAIL` | Sender address **verified** in Brevo | `yourproject@gmail.com` |
+| `BREVO_SENDER_NAME` | Display name on the email (optional) | `SmartBank` |
 
 
 ### 4. Seed the database
@@ -331,22 +326,8 @@ companion **Code Walkthrough** document shared alongside this repository.
 ## 🛠 Known Gaps / In-Progress Work
 
 
-- **Email verification is half-wired.** The database has `email_verified` and
-  `verification_code` columns (added in `db/db.js`), and `utils/mailer.js`
-  already knows how to send a 6-digit code by email. `frontend/index.html`
-  already shows a "Check your email" screen and calls `POST /auth/verify`
-  after registering — but **`routes/auth.js` does not yet define a `/verify`
-  route**, and `/auth/register` does not yet generate a code or call
-  `sendVerificationEmail()`. Right now, submitting the verification form will
-  fail. Finishing this is the next task: generate a random code at
-  registration, store it in `verification_code`, email it via
-  `sendVerificationEmail()`, and add a `POST /auth/verify` route that checks
-  the code, sets `email_verified = 1`, and issues the JWT.
 - **No automated test suite yet** (see [Testing](#-testing) below) — required
   before submission per the course spec.
-- **Gmail credentials in `.env.example`** should be replaced with a project
-  mailbox and a Gmail **App Password** (not a real personal password) before
-  going further with this feature.
 
 ---
 
@@ -423,8 +404,8 @@ This project is ready to deploy as-is:
 
 **Before deploying:**
 
-1. Set the environment variables listed above (including `EMAIL_USER` /
-   `EMAIL_PASS`) in your hosting provider's dashboard — never rely on a
+1. Set the environment variables listed above (including `BREVO_API_KEY` /
+   `BREVO_SENDER_EMAIL`) in your hosting provider's dashboard — never rely on a
    committed `.env` file in production.
 2. Generate a strong, random `JWT_SECRET` — do not reuse the local
    development value (`render.yaml` can auto-generate this for you).
@@ -443,7 +424,7 @@ This project is ready to deploy as-is:
 | Native build errors during `npm install` | `better-sqlite3` needs to compile native code | Use Node 18 or 20 LTS rather than the very latest Node version |
 | Port already in use | Another process is using port 4000 | Change `PORT` in `.env`, or stop the other process |
 | "Verification code" screen doesn't work after registering | `/auth/verify` isn't implemented on the backend yet | See [Known Gaps](#-known-gaps--in-progress-work) |
-| Nodemailer errors on startup or when sending mail | Missing/incorrect `EMAIL_USER` / `EMAIL_PASS`, or Gmail blocking the login | Use a Gmail **App Password**, not your normal account password (requires 2-Step Verification enabled on the Gmail account) |
+| Register hangs / "verification email could not be sent" on Render | Render's free plan blocks SMTP; or `BREVO_API_KEY` / `BREVO_SENDER_EMAIL` missing, or the sender isn't verified in Brevo | Use the Brevo API (already done), set both variables in Render → Environment, verify the sender in Brevo, and read the Render logs for the `Brevo API error` line |
 
 ---
 

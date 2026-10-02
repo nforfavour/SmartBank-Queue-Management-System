@@ -5,6 +5,8 @@ services:
     plan: free
 
     envVars:
+      - key: NODE_ENV
+        value: production
 
       - key: JWT_SECRET
         generateValue: true
@@ -18,8 +20,11 @@ services:
       - key: ADMIN_SIGNUP_CODE
         sync: false
 
-      - key: EMAIL_USER
+      - key: BREVO_API_KEY
         sync: false
 
-      - key: EMAIL_PASS
+      - key: BREVO_SENDER_EMAIL
         sync: false
+
+      - key: BREVO_SENDER_NAME
+        value: SmartBank

@@ -1,4 +1,5 @@
 // utils/mailer.js
+// Sends verification and password-reset emails through the Brevo HTTP API (HTTPS, not SMTP).
 
 const BREVO_URL = "https://api.brevo.com/v3/smtp/email";
 const TIMEOUT_MS = 15000;

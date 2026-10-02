@@ -82,4 +82,18 @@ try {
   db.exec("ALTER TABLE users ADD COLUMN verification_code TEXT");
 } catch (e) { /* column already exists, ignore */ }
 
+// Add password-reset columns if they don't already exist (safe on existing databases).
+//   reset_code         - SHA-256 hash of the 6-digit code (never the code itself)
+//   reset_code_expires - expiry time as milliseconds since 1970
+//   reset_attempts     - wrong guesses so far for the current code
+try {
+  db.exec("ALTER TABLE users ADD COLUMN reset_code TEXT");
+} catch (e) { /* column already exists, ignore */ }
+try {
+  db.exec("ALTER TABLE users ADD COLUMN reset_code_expires INTEGER");
+} catch (e) { /* column already exists, ignore */ }
+try {
+  db.exec("ALTER TABLE users ADD COLUMN reset_attempts INTEGER DEFAULT 0");
+} catch (e) { /* column already exists, ignore */ }
+
 module.exports = db;

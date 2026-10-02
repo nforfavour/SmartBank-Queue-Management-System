@@ -3,7 +3,9 @@ services:
     name: smartbank-queue-system
     env: docker
     plan: free
+
     envVars:
+
       - key: JWT_SECRET
         generateValue: true
 
@@ -18,7 +20,12 @@ services:
 
       - key: EMAIL_USER
         sync: false
+<<<<<<< HEAD
 
       - key: EMAIL_PASS
         sync: false
+=======
+>>>>>>> origin/main
 
+      - key: EMAIL_PASS
+        sync: false

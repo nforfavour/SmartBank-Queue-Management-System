@@ -31,6 +31,10 @@
       <input type="password" id="loginPassword" required placeholder="••••••••" />
       <button class="btn" type="submit">Log In</button>
       <p id="loginError" class="error-msg hidden"></p>
+      <p id="loginInfo" class="success-msg hidden"></p>
+      <div class="form-links">
+        <button type="button" class="link-btn" id="forgotLink">Forgot password?</button>
+      </div>
     </form>
 
     <!-- REGISTER -->
@@ -70,6 +74,38 @@
       <button class="btn" type="submit">Verify &amp; Continue</button>
       <p id="verifyError" class="error-msg hidden"></p>
     </form>
+
+    <!-- FORGOT PASSWORD: step 1 - ask for the e-mail address -->
+    <form id="forgotForm" class="hidden">
+      <h2>Forgot your password?</h2>
+      <p class="muted">Enter the email you registered with and we will send you a 6-digit code.</p>
+      <label>Email</label>
+      <input type="email" id="forgotEmail" required placeholder="you@example.com" />
+      <button class="btn" type="submit" id="forgotBtn">Send Reset Code</button>
+      <p id="forgotError" class="error-msg hidden"></p>
+      <div class="form-links">
+        <button type="button" class="link-btn" id="forgotBack">Back to Log In</button>
+      </div>
+    </form>
+
+    <!-- FORGOT PASSWORD: step 2 - enter the code and a new password -->
+    <form id="resetForm" class="hidden">
+      <h2>Reset your password</h2>
+      <p class="muted">If an account exists for <strong id="resetEmailDisplay"></strong>, a 6-digit code is on its way. It expires in 10 minutes.</p>
+      <label>Reset code</label>
+      <input type="text" id="resetCode" required maxlength="6" inputmode="numeric" autocomplete="one-time-code" placeholder="123456" />
+      <label>New password</label>
+      <input type="password" id="resetPassword" required minlength="6" placeholder="At least 6 characters" />
+      <label>Confirm new password</label>
+      <input type="password" id="resetPassword2" required minlength="6" placeholder="Repeat the new password" />
+      <button class="btn" type="submit">Reset Password</button>
+      <p id="resetError" class="error-msg hidden"></p>
+      <p id="resetInfo" class="success-msg hidden"></p>
+      <div class="form-links">
+        <button type="button" class="link-btn" id="resendBtn">Resend code</button>
+        <button type="button" class="link-btn" id="resetBack">Back to Log In</button>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -86,6 +122,8 @@
     document.getElementById("loginForm").classList.toggle("hidden", tab !== "login");
     document.getElementById("registerForm").classList.toggle("hidden", tab !== "register");
     document.getElementById("verifyForm").classList.add("hidden");
+    document.getElementById("forgotForm").classList.add("hidden");
+    document.getElementById("resetForm").classList.add("hidden");
     document.getElementById("tabRow").classList.remove("hidden");
     document.getElementById("tabLogin").classList.toggle("active", tab === "login");
     document.getElementById("tabRegister").classList.toggle("active", tab === "register");
@@ -100,6 +138,7 @@
     e.preventDefault();
     const errEl = document.getElementById("loginError");
     clearMsg(errEl);
+    clearMsg(document.getElementById("loginInfo"));
     try {
       const data = await apiRequest("/auth/login", {
         method: "POST",
@@ -160,6 +199,120 @@
       });
       setSession(data.token, data.user);
       window.location.href = roleHome(data.user.role);
+    } catch (err) {
+      showError(errEl, err.message);
+    }
+  });
+
+  // ---------------- Forgot password / reset password ----------------
+  let resetEmail = null;
+  let resendTimer = null;
+
+  function showOnly(formId) {
+    ["loginForm", "registerForm", "verifyForm", "forgotForm", "resetForm"].forEach((id) => {
+      document.getElementById(id).classList.toggle("hidden", id !== formId);
+    });
+    document.getElementById("tabRow").classList.add("hidden");
+  }
+
+  function startResendCountdown(seconds) {
+    const btn = document.getElementById("resendBtn");
+    clearInterval(resendTimer);
+    let left = seconds;
+    btn.disabled = true;
+    btn.textContent = "Resend code (" + left + "s)";
+    resendTimer = setInterval(() => {
+      left -= 1;
+      if (left <= 0) {
+        clearInterval(resendTimer);
+        btn.disabled = false;
+        btn.textContent = "Resend code";
+      } else {
+        btn.textContent = "Resend code (" + left + "s)";
+      }
+    }, 1000);
+  }
+
+  document.getElementById("forgotLink").addEventListener("click", () => {
+    clearMsg(document.getElementById("forgotError"));
+    document.getElementById("forgotEmail").value = document.getElementById("loginEmail").value.trim();
+    showOnly("forgotForm");
+  });
+
+  document.getElementById("forgotBack").addEventListener("click", () => showTab("login"));
+
+  document.getElementById("resetBack").addEventListener("click", () => {
+    clearInterval(resendTimer);
+    showTab("login");
+  });
+
+  document.getElementById("forgotForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const errEl = document.getElementById("forgotError");
+    const btn = document.getElementById("forgotBtn");
+    clearMsg(errEl);
+    btn.disabled = true;
+    btn.textContent = "Sending...";
+    try {
+      const email = document.getElementById("forgotEmail").value.trim();
+      await apiRequest("/auth/forgot-password", { method: "POST", auth: false, body: { email: email } });
+      resetEmail = email;
+      document.getElementById("resetEmailDisplay").textContent = email;
+      ["resetCode", "resetPassword", "resetPassword2"].forEach((id) => { document.getElementById(id).value = ""; });
+      clearMsg(document.getElementById("resetError"));
+      clearMsg(document.getElementById("resetInfo"));
+      showOnly("resetForm");
+      startResendCountdown(60);
+    } catch (err) {
+      showError(errEl, err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Send Reset Code";
+    }
+  });
+
+  document.getElementById("resendBtn").addEventListener("click", async () => {
+    const errEl = document.getElementById("resetError");
+    const infoEl = document.getElementById("resetInfo");
+    clearMsg(errEl);
+    clearMsg(infoEl);
+    try {
+      await apiRequest("/auth/forgot-password", { method: "POST", auth: false, body: { email: resetEmail } });
+      infoEl.textContent = "A new code has been requested. Check your inbox.";
+      infoEl.classList.remove("hidden");
+      startResendCountdown(60);
+    } catch (err) {
+      showError(errEl, err.message);
+    }
+  });
+
+  document.getElementById("resetForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const errEl = document.getElementById("resetError");
+    clearMsg(errEl);
+    const pw = document.getElementById("resetPassword").value;
+    if (pw !== document.getElementById("resetPassword2").value) {
+      showError(errEl, "The two passwords do not match.");
+      return;
+    }
+    try {
+      const data = await apiRequest("/auth/reset-password", {
+        method: "POST",
+        auth: false,
+        body: {
+          email: resetEmail,
+          code: document.getElementById("resetCode").value.trim(),
+          newPassword: pw,
+        },
+      });
+      clearInterval(resendTimer);
+      // Back to the login form with a success message and the e-mail filled in.
+      showTab("login");
+      document.getElementById("loginEmail").value = resetEmail;
+      document.getElementById("loginPassword").value = "";
+      const info = document.getElementById("loginInfo");
+      info.textContent = data.message;
+      info.classList.remove("hidden");
     } catch (err) {
       showError(errEl, err.message);
     }

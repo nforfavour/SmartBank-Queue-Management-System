@@ -515,7 +515,11 @@ router.get("/me", authenticate, (req, res) => {
 
 const RESET_CODE_MINUTES = 10;   // how long a reset code stays valid
 const RESET_MAX_ATTEMPTS = 5;    // wrong guesses allowed per code
-const RESET_RESEND_SECONDS = 60; // minimum gap between two codes
+const RESET_RESEND_SECONDS = 30; // minimum gap between two codes
+
+// Remembers when a code was last SENT to each e-mail address (in memory).
+// It covers unknown e-mails too, so the cooldown never reveals who has an account.
+const lastResetSent = new Map();
 
 function hashResetCode(code) {
   return crypto.createHash("sha256").update(String(code)).digest("hex");
@@ -551,24 +555,29 @@ router.post("/forgot-password", async (req, res) => {
       email: cleanEmail
     };
 
+    // Cooldown: if a code was sent very recently, say so (instead of
+    // silently doing nothing) and tell the page how long to wait.
+    const now = Date.now();
+    const last = lastResetSent.get(cleanEmail) || 0;
+    const waitMs = RESET_RESEND_SECONDS * 1000 - (now - last);
+
+    if (waitMs > 0) {
+      return res.json({
+        message:
+          "A code was sent a moment ago. Please wait before asking for another one.",
+        email: cleanEmail,
+        waitSeconds: Math.ceil(waitMs / 1000)
+      });
+    }
+
     const user = db
-      .prepare(
-        "SELECT user_id, reset_code_expires FROM users WHERE email = ?"
-      )
+      .prepare("SELECT user_id FROM users WHERE email = ?")
       .get(cleanEmail);
 
     if (!user) {
-      return res.json(genericReply);
-    }
-
-    // Do not send a new code if one was issued less than a minute ago.
-    const now = Date.now();
-    const issuedAt = user.reset_code_expires
-      ? user.reset_code_expires - RESET_CODE_MINUTES * 60 * 1000
-      : 0;
-
-    if (issuedAt && now - issuedAt < RESET_RESEND_SECONDS * 1000) {
-      return res.json(genericReply);
+      // Pretend we sent something, and start the same cooldown.
+      lastResetSent.set(cleanEmail, now);
+      return res.json({ ...genericReply, waitSeconds: RESET_RESEND_SECONDS });
     }
 
     // Random 6-digit code (cryptographically secure); only its hash is stored.
@@ -591,6 +600,9 @@ router.post("/forgot-password", async (req, res) => {
 
       await sendPasswordResetEmail(cleanEmail, code, RESET_CODE_MINUTES);
 
+      // Only start the cooldown once the e-mail really went out.
+      lastResetSent.set(cleanEmail, Date.now());
+
       console.log(`[AUTH] Password reset email sent to ${cleanEmail}`);
 
     } catch (error) {
@@ -606,7 +618,7 @@ router.post("/forgot-password", async (req, res) => {
       });
     }
 
-    return res.json(genericReply);
+    return res.json({ ...genericReply, waitSeconds: RESET_RESEND_SECONDS });
 
   } catch (error) {
 

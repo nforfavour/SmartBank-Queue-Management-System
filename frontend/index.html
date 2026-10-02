@@ -41,7 +41,7 @@
     <form id="registerForm" class="hidden">
       <h2>Create your account</h2>
       <label>Full name</label>
-      <input type="text" id="regName" required placeholder="Jane Doe" />
+      <input type="text" id="regName" required placeholder="Enter Full Names" />
       <label>Email</label>
       <input type="email" id="regEmail" required placeholder="you@example.com" />
       <label>Phone</label>
@@ -255,14 +255,14 @@
     btn.textContent = "Sending...";
     try {
       const email = document.getElementById("forgotEmail").value.trim();
-      await apiRequest("/auth/forgot-password", { method: "POST", auth: false, body: { email: email } });
+      const data = await apiRequest("/auth/forgot-password", { method: "POST", auth: false, body: { email: email } });
       resetEmail = email;
       document.getElementById("resetEmailDisplay").textContent = email;
       ["resetCode", "resetPassword", "resetPassword2"].forEach((id) => { document.getElementById(id).value = ""; });
       clearMsg(document.getElementById("resetError"));
       clearMsg(document.getElementById("resetInfo"));
       showOnly("resetForm");
-      startResendCountdown(60);
+      startResendCountdown(data.waitSeconds || 30);
     } catch (err) {
       showError(errEl, err.message);
     } finally {
@@ -277,10 +277,12 @@
     clearMsg(errEl);
     clearMsg(infoEl);
     try {
-      await apiRequest("/auth/forgot-password", { method: "POST", auth: false, body: { email: resetEmail } });
-      infoEl.textContent = "A new code has been requested. Check your inbox.";
+      const data = await apiRequest("/auth/forgot-password", { method: "POST", auth: false, body: { email: resetEmail } });
+      infoEl.textContent = data.waitSeconds && data.message.indexOf("moment ago") !== -1
+        ? "A code was just sent. Please wait a few seconds before asking again."
+        : "A new code has been sent. Check your inbox (and spam folder).";
       infoEl.classList.remove("hidden");
-      startResendCountdown(60);
+      startResendCountdown(data.waitSeconds || 30);
     } catch (err) {
       showError(errEl, err.message);
     }

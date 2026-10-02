@@ -4,18 +4,11 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
-<<<<<<< HEAD
 const crypto = require("crypto");
 
 const db = require("../db/db");
 const { authenticate } = require("../middleware/auth");
 const { sendVerificationEmail, sendPasswordResetEmail } = require("../utils/mailer");
-=======
-
-const db = require("../db/db");
-const { authenticate } = require("../middleware/auth");
-const { sendVerificationEmail } = require("../utils/mailer");
->>>>>>> origin/main
 
 const router = express.Router();
 
@@ -517,7 +510,6 @@ router.get("/me", authenticate, (req, res) => {
 
 
 // ======================================================
-<<<<<<< HEAD
 // FORGOT PASSWORD  (step 1: e-mail a 6-digit reset code)
 // ======================================================
 
@@ -754,23 +746,5 @@ function signToken(payload) {
 
 }
 
-=======
-// JWT
-// ======================================================
-
-function signToken(payload) {
-
-  return jwt.sign(
-    payload,
-    process.env.JWT_SECRET,
-    {
-      expiresIn:
-        process.env.JWT_EXPIRES_IN || "8h"
-    }
-  );
-
-}
-
->>>>>>> origin/main
 
 module.exports = router;

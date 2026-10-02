@@ -4,10 +4,11 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
+const crypto = require("crypto");
 
 const db = require("../db/db");
 const { authenticate } = require("../middleware/auth");
-const { sendVerificationEmail } = require("../utils/mailer");
+const { sendVerificationEmail, sendPasswordResetEmail } = require("../utils/mailer");
 
 const router = express.Router();
 
@@ -505,6 +506,226 @@ router.get("/me", authenticate, (req, res) => {
   }
 
   res.json({ user });
+});
+
+
+// ======================================================
+// FORGOT PASSWORD  (step 1: e-mail a 6-digit reset code)
+// ======================================================
+
+const RESET_CODE_MINUTES = 10;   // how long a reset code stays valid
+const RESET_MAX_ATTEMPTS = 5;    // wrong guesses allowed per code
+const RESET_RESEND_SECONDS = 60; // minimum gap between two codes
+
+function hashResetCode(code) {
+  return crypto.createHash("sha256").update(String(code)).digest("hex");
+}
+
+function clearResetCode(userId) {
+  db.prepare(`
+    UPDATE users
+    SET reset_code = NULL, reset_code_expires = NULL, reset_attempts = 0
+    WHERE user_id = ?
+  `).run(userId);
+}
+
+router.post("/forgot-password", async (req, res) => {
+
+  try {
+
+    const { email } = req.body;
+
+    if (!email || typeof email !== "string") {
+      return res.status(400).json({
+        error: "Email is required."
+      });
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+
+    // The same answer is given whether or not the account exists,
+    // so nobody can use this form to find out who has an account.
+    const genericReply = {
+      message:
+        "If an account exists for that email, a 6-digit reset code has been sent.",
+      email: cleanEmail
+    };
+
+    const user = db
+      .prepare(
+        "SELECT user_id, reset_code_expires FROM users WHERE email = ?"
+      )
+      .get(cleanEmail);
+
+    if (!user) {
+      return res.json(genericReply);
+    }
+
+    // Do not send a new code if one was issued less than a minute ago.
+    const now = Date.now();
+    const issuedAt = user.reset_code_expires
+      ? user.reset_code_expires - RESET_CODE_MINUTES * 60 * 1000
+      : 0;
+
+    if (issuedAt && now - issuedAt < RESET_RESEND_SECONDS * 1000) {
+      return res.json(genericReply);
+    }
+
+    // Random 6-digit code (cryptographically secure); only its hash is stored.
+    const code = String(crypto.randomInt(100000, 1000000));
+
+    db.prepare(`
+      UPDATE users
+      SET
+        reset_code = ?,
+        reset_code_expires = ?,
+        reset_attempts = 0
+      WHERE user_id = ?
+    `).run(
+      hashResetCode(code),
+      now + RESET_CODE_MINUTES * 60 * 1000,
+      user.user_id
+    );
+
+    try {
+
+      await sendPasswordResetEmail(cleanEmail, code, RESET_CODE_MINUTES);
+
+      console.log(`[AUTH] Password reset email sent to ${cleanEmail}`);
+
+    } catch (error) {
+
+      console.error("[AUTH] Failed to send password reset email:", error);
+
+      // Nothing was delivered, so the code is useless - remove it.
+      clearResetCode(user.user_id);
+
+      return res.status(500).json({
+        error:
+          "We could not send the reset email. Please try again."
+      });
+    }
+
+    return res.json(genericReply);
+
+  } catch (error) {
+
+    console.error("[AUTH] Forgot password error:", error);
+
+    return res.status(500).json({
+      error: "Something went wrong. Please try again."
+    });
+  }
+});
+
+
+// ======================================================
+// RESET PASSWORD  (step 2: check the code, set a new password)
+// ======================================================
+
+router.post("/reset-password", (req, res) => {
+
+  try {
+
+    const { email, code, newPassword } = req.body;
+
+    if (!email || !code || !newPassword) {
+      return res.status(400).json({
+        error: "Email, reset code and new password are required."
+      });
+    }
+
+    if (String(newPassword).length < 6) {
+      return res.status(400).json({
+        error: "Password must be at least 6 characters."
+      });
+    }
+
+    const cleanEmail = String(email).trim().toLowerCase();
+    const cleanCode = String(code).trim();
+
+    const badCode = () =>
+      res.status(400).json({ error: "Invalid or expired reset code." });
+
+    const user = db
+      .prepare("SELECT * FROM users WHERE email = ?")
+      .get(cleanEmail);
+
+    if (!user || !user.reset_code || !user.reset_code_expires) {
+      return badCode();
+    }
+
+    // Expired?
+    if (Date.now() > user.reset_code_expires) {
+      clearResetCode(user.user_id);
+      return badCode();
+    }
+
+    // Too many wrong guesses on this code?
+    if ((user.reset_attempts || 0) >= RESET_MAX_ATTEMPTS) {
+      clearResetCode(user.user_id);
+      return res.status(400).json({
+        error: "Too many incorrect attempts. Please request a new code."
+      });
+    }
+
+    // Compare the hash of what was typed with the stored hash.
+    const typed = Buffer.from(hashResetCode(cleanCode));
+    const stored = Buffer.from(user.reset_code);
+
+    const matches =
+      typed.length === stored.length &&
+      crypto.timingSafeEqual(typed, stored);
+
+    if (!matches) {
+
+      const attempts = (user.reset_attempts || 0) + 1;
+
+      if (attempts >= RESET_MAX_ATTEMPTS) {
+        clearResetCode(user.user_id);
+        return res.status(400).json({
+          error: "Too many incorrect attempts. Please request a new code."
+        });
+      }
+
+      db.prepare(
+        "UPDATE users SET reset_attempts = ? WHERE user_id = ?"
+      ).run(attempts, user.user_id);
+
+      return badCode();
+    }
+
+    // Code is correct: save the new password and use up the code.
+    // Receiving the code proves the person owns this e-mail address,
+    // so the account is also marked as verified.
+    db.prepare(`
+      UPDATE users
+      SET
+        password_hash = ?,
+        email_verified = 1,
+        verification_code = NULL,
+        reset_code = NULL,
+        reset_code_expires = NULL,
+        reset_attempts = 0
+      WHERE user_id = ?
+    `).run(
+      bcrypt.hashSync(String(newPassword), 10),
+      user.user_id
+    );
+
+    return res.json({
+      message:
+        "Password reset successfully. You can now log in with your new password."
+    });
+
+  } catch (error) {
+
+    console.error("[AUTH] Reset password error:", error);
+
+    return res.status(500).json({
+      error: "Something went wrong while resetting your password."
+    });
+  }
 });
 
 

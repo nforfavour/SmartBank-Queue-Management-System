@@ -54,7 +54,36 @@ router.post("/register", async (req, res) => {
     // -----------------------------
     // Determine role
     // -----------------------------
+  // -----------------------------
+// Validate name (letters only)
+// -----------------------------
 
+if (!/^[A-Za-z\s'-]+$/.test(username.trim())) {
+  return res.status(400).json({
+    error: "Name can only contain letters — no numbers or symbols."
+  });
+}
+
+// -----------------------------
+// Validate email format strictly
+// -----------------------------
+
+const emailRegex = /^[a-zA-Z0-9._%]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+if (!emailRegex.test(cleanEmail)) {
+  return res.status(400).json({
+    error: "Please enter a valid email address."
+  });
+}
+
+// Block fake-looking "name-1@gmail.com" style addresses
+const localPart = cleanEmail.split("@")[0];
+
+if (/-\d+$/.test(localPart)) {
+  return res.status(400).json({
+    error: "That doesn't look like a real email address. Please use your actual email."
+  });
+}
     const requestedRole = role || "customer";
 
     if (!["customer", "staff", "admin"].includes(requestedRole)) {
